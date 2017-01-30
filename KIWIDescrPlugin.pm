@@ -324,6 +324,7 @@ sub createRepositoryMetadata {
             $cmd = "/usr/bin/add_product_susedata";
             $cmd .= " -u"; # unique filenames
             $cmd .= " -k $kwdfile";
+            $cmd .= " -p"; # add diskusage data
             $cmd .= " -e /usr/share/doc/packages/eulas";
             $cmd .= " -d $p/$datadir";
             $this->logMsg("I", "Executing command <$cmd>");
