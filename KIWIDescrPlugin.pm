@@ -52,38 +52,22 @@ sub new {
     my $ini = Config::IniFiles -> new( -file => "$configpath/$configfile" );
     my $name       = $ini->val('base', 'name');
     my $order      = $ini->val('base', 'order');
-    my $tool       = $ini->val('base', 'tool');
     my $createrepo = $ini->val('base', 'createrepo');
     my $rezip      = $ini->val('base', 'rezip');
-    my $tdir       = $ini->val('base', 'tooldir');
-    my $tpack      = $ini->val('base', 'toolpack');
     my $enable     = $ini->val('base', 'defaultenable');
     my @params     = $ini->val('options', 'parameter');
     my $gzip       = $ini->val('target', 'compress');
     # if any of those isn't set, complain!
     if(not defined($name)
         or not defined($order)
-        or not defined($tool)
         or not defined($createrepo)
         or not defined($rezip)
-        or not defined($tdir)
-        or not defined($tpack)
         or not defined($enable)
         or not defined($gzip)
         or not (@params)
     ) {
         $this->logMsg("E",
             "Plugin ini file <$config> seems broken!"
-        );
-        return;
-    }
-    # sanity check for tools' existence:
-    if(not( -f "$tdir/$tool" and -x "$tdir/$tool")) {
-        $this->logMsg("E",
-            "Plugin <$name>: tool <$tdir/$tool> is not executable!"
-        );
-        $this->logMsg("I",
-            "Check if package <$tpack> is installed."
         );
         return;
     }
@@ -101,9 +85,6 @@ sub new {
     }
     $this->name($name);
     $this->order($order);
-    $this->{m_tool} = $tool;
-    $this->{m_tooldir} = $tdir;
-    $this->{m_toolpack} = $tpack;
     $this->{m_createrepo} = $createrepo;
     $this->{m_rezip} = $rezip;
     $this->{m_params} = $params;
@@ -167,28 +148,6 @@ sub executeDir {
     # reversed again, making the result '-d', '<dir1>', ..., '-d', '<dir_N>'",
     # after the join as string.
     # ---
-    if ($descrdir && $descrdir ne "/") {
-        my $pathlist = "-d ".join(' -d ', map{$_."/".$datadir}(@paths));
-        $this->logMsg("I",
-            "Calling ".$this->name()." for directories <@paths>:"
-        );
-        $targetdir = $paths[0]."/".$descrdir;
-        $cmd = "$this->{m_tooldir}/$this->{m_tool} "
-            . "$pathlist $params -o "
-            . $paths[0]
-            . "/"
-            . $descrdir;
-        $this->logMsg("I", "Executing command <$cmd>");
-        $call = $this -> callCmd($cmd);
-        $status = $call->[0];
-        if($status) {
-            my $out = join("\n",@{$call->[1]});
-            $this->logMsg("E",
-                "Called <$cmd> exit status <$status> output: $out"
-            );
-            return 0;
-        }
-    }
     if ( $createrepomd && $createrepomd eq "true" ) {
         my $distroname = $coll->productData()->getInfo("DISTRIBUTION")."."
                 . $coll->productData()->getInfo("VERSION");
