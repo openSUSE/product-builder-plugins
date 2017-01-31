@@ -64,7 +64,6 @@ sub new {
         or not defined($rezip)
         or not defined($enable)
         or not defined($gzip)
-        or not (@params)
     ) {
         $this->logMsg("E",
             "Plugin ini file <$config> seems broken!"

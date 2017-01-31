@@ -346,7 +346,7 @@ sub updateInitRDNET {
     $this -> logMsg("E", "no initrds found!") unless @initrdfiles;
 
     for my $initrd (@initrdfiles) {
-        $this -> logMsg("I", "updating $initrd with $repoloc");
+        $this -> logMsg("I", "updating $initrd");
         my $fh  = FileHandle -> new();
         if (! $fh -> open("|$zipper -c >> $initrd")) {
         #if (! $fh -> open(">$initrd.append")) {
