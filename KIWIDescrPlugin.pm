@@ -156,6 +156,7 @@ sub executeDir {
         }
     }
     # insert translation files
+if (0) {
     my $trans_dir  = '/usr/share/locale/en_US/LC_MESSAGES';
     my $trans_glob = 'package-translations-*.mo';
     foreach my $trans (glob($trans_dir.'/'.$trans_glob)) {
@@ -188,6 +189,7 @@ sub executeDir {
         );
         return 1;
     }
+}
     if (-x "/usr/bin/openSUSE-appstream-process") {
         foreach my $p (@paths) {
             $cmd = "/usr/bin/openSUSE-appstream-process";
