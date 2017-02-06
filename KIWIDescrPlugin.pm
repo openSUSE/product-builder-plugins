@@ -129,14 +129,11 @@ sub executeDir {
         return 0;
     }
     my $coll  = $this->{m_collect};
-    my $datadir  = $coll->productData()->getInfo("DATADIR");
     my $descrdir = $coll->productData()->getInfo("DESCRDIR");
     my $cpeid = $coll->productData()->getInfo("CPEID");
     my $repoid = $coll->productData()->getInfo("REPOID");
     my $createrepomd = $coll->productData()->getVar("CREATE_REPOMD");
     my $metadataonly = $coll->productData()->getVar("RPMHDRS_ONLY");
-    my $targetdir;
-    my $newtargetdir;
     my $params = "$this->{m_params} -H" ? $metadataonly eq "true" : "$this->{m_params}";
     ## this ugly bit creates a parameter string from a list of directories:
     # param = -d <dir1> -d <dir2> ...
@@ -151,15 +148,13 @@ sub executeDir {
         my $distroname = $coll->productData()->getInfo("DISTRIBUTION")."."
                 . $coll->productData()->getInfo("VERSION");
         my $result = $this -> createRepositoryMetadata(
-            \@paths, $repoid, $distroname, $cpeid, $datadir, $targetdir
+            \@paths, $repoid, $distroname, $cpeid
         );
         # return values 0 || 1 indicates an error
         if ($result != 2) {
             return $result;
         }
     }
-    return 1 unless $descrdir;
-    return 1 unless $targetdir;
     # insert translation files
     my $trans_dir  = '/usr/share/locale/en_US/LC_MESSAGES';
     my $trans_glob = 'package-translations-*.mo';
@@ -167,8 +162,8 @@ sub executeDir {
         $trans = basename($trans, ".mo");
         $trans =~ s,.*-,,x;
         $cmd = "/usr/bin/translate_packages.pl $trans "
-            . "< $targetdir/packages.en "
-            . "> $targetdir/packages.$trans";
+            . "< packages.en "
+            . "> packages.$trans";
         $call = $this -> callCmd($cmd);
         $status = $call->[0];
         if($status) {
@@ -181,9 +176,9 @@ sub executeDir {
     }
     # one more time for english to insert possible EULAs
     $cmd = "/usr/bin/translate_packages.pl en "
-        . "< $targetdir/packages.en "
-        . "> $targetdir/packages.en.new && "
-        . "mv $targetdir/packages.en.new $targetdir/packages.en";
+        . "< packages.en "
+        . "> packages.en.new && "
+        . "mv packages.en.new packages.en";
     $call = $this -> callCmd($cmd);
     $status = $call->[0];
     if ($status) {
@@ -207,12 +202,12 @@ sub executeDir {
         };
     }
     if($this->{m_compress} =~ m{yes}i) {
-        foreach my $pfile(glob("$targetdir/packages*")) {
+        foreach my $pfile(glob("packages*")) {
             if(system("gzip", "--rsyncable", "$pfile") == 0) {
-                unlink "$targetdir/$pfile";
+                unlink "$pfile";
             } else {
                 $this->logMsg("W",
-                    "Can't compress file <$targetdir/$pfile>!"
+                    "Can't compress file <$pfile>!"
                 );
             }
         }
@@ -224,11 +219,10 @@ sub createRepositoryMetadata {
     my @params = @_;
     my $this       = $params[0];
     my $paths      = $params[1];
+    my $masterpath = @{$paths}[0];
     my $repoid     = $params[2];
     my $distroname = $params[3];
     my $cpeid      = $params[4];
-    my $datadir    = $params[5];
-    my $targetdir  = $params[6];
     my $cmd;
     my $call;
     my $status;
@@ -239,7 +233,7 @@ sub createRepositoryMetadata {
         $cmd .= " --no-database";
         $cmd .= " --repo=\"$repoid\"" if $repoid;
         $cmd .= " --distro=\"$cpeid,$distroname\"" if $cpeid && $distroname;
-        $cmd .= " $p/$datadir";
+        $cmd .= " $p";
         $this->logMsg("I", "Executing command <$cmd>");
         $call = $this -> callCmd($cmd);
         $status = $call->[0];
@@ -250,7 +244,7 @@ sub createRepositoryMetadata {
             );
             return 0;
         }
-        $cmd = "$this->{m_rezip} $p/$datadir ";
+        $cmd = "$this->{m_rezip} $p ";
         $this->logMsg("I", "Executing command <$cmd>");
         $call = $this -> callCmd($cmd);
         $status = $call->[0];
@@ -264,8 +258,8 @@ sub createRepositoryMetadata {
         if (-x "/usr/bin/openSUSE-appstream-process")
         {
             $cmd = "/usr/bin/openSUSE-appstream-process";
-            $cmd .= " $p/$datadir";
-            $cmd .= " $p/$datadir/repodata";
+            $cmd .= " $p";
+            $cmd .= " $p/repodata";
 
             $call = $this -> callCmd($cmd);
             $status = $call->[0];
@@ -284,7 +278,7 @@ sub createRepositoryMetadata {
             $cmd .= " -k $kwdfile";
             $cmd .= " -p"; # add diskusage data
             $cmd .= " -e /usr/share/doc/packages/eulas";
-            $cmd .= " -d $p/$datadir";
+            $cmd .= " -d $p";
             $this->logMsg("I", "Executing command <$cmd>");
             $call = $this -> callCmd($cmd);
             $status = $call->[0];
@@ -297,6 +291,21 @@ sub createRepositoryMetadata {
             }
         }
     }
+    # merge meta data
+    $cmd = "mergerepo_c";
+    foreach my $p (@{$paths}) {
+      $cmd .= " --repo=$p";
+    }
+    $call = $this -> callCmd($cmd);
+    $status = $call->[0];
+    my $out = join("\n",@{$call->[1]});
+    $this->logMsg("I", "Called $cmd exit status: <$status> output: $out");
+    # cleanup
+    foreach my $p (@{$paths}) {
+      system("rm", "-rf", $p);
+    }
+    # move merge repo in place
+    system("mv", "merged_repo/repodata", "$masterpath/repodata");
     return 2;
 }
 
