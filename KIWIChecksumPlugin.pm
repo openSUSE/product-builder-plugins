@@ -16,7 +16,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
 #
 ################################################################
-package KIWIContentPlugin;
+package KIWIChecksumPlugin;
 
 use strict;
 use warnings;
@@ -28,7 +28,7 @@ use Config::IniFiles;
 
 sub new {
     # ...
-    # Create a new KIWIContentPlugin object
+    # Create a new KIWIChecksumPlugin object
     # ---
     my $class   = shift;
     my $handler = shift;
@@ -56,7 +56,7 @@ sub new {
     # the plugin, and therefore damn well know what it needs and what not.
     # I'm definitely not bothering PMs with Yet Another File Specification
     #---
-    ## plugin content:
+    ## plugin checksum:
     #-----------------
     #[base]
     # name = KIWIEulaPlugin
@@ -64,7 +64,6 @@ sub new {
     # defaultenable = 1
     #
     #[target]
-    # targetfile = content
     # targetdir = $PRODUCT_DIR
     # media = (list of numbers XOR "all")
     #
@@ -74,16 +73,12 @@ sub new {
     my $name      = $ini->val('base', 'name'); # scalar value
     my $order     = $ini->val('base', 'order'); # scalar value
     my $enable    = $ini->val('base', 'defaultenable'); # scalar value
-    my $target    = $ini->val('target', 'targetfile');
     my $targetdir = $ini->val('target', 'targetdir');
-    my @media     = $ini->val('target', 'media');
     # if any of those isn't set, complain!
     if(not defined($name)
         or not defined($order)
         or not defined($enable)
-        or not defined($target)
         or not defined($targetdir)
-        or not @media
     ) {
         $this->logMsg("E", "Plugin ini file <$config> seems broken!");
         return;
@@ -95,9 +90,8 @@ sub new {
         $this->ready(1);
     }
     $this->requiredDirs($targetdir);
-    $this->{m_target} = $target;
+    $this->{m_target} = "CHECKSUMS";
     $this->{m_targetdir} = $targetdir;
-    @{$this->{m_media}} = @media;
     return $this;
 }
 
@@ -112,46 +106,13 @@ sub execute {
     }
     my @targetmedia = $this->collect()->getMediaNumbers();
     my %targets;
-    if($this->{m_media}->[0] =~ m{all}i) {
-        %targets = map { $_ => 1 } @targetmedia;
-    } else {
-        foreach my $cd(@{$this->{m_media}}) {
-            if(grep { $cd } @targetmedia) {
-                $targets{$cd} = 1;
-            }
-        }
-    }
-    my $info = $this->collect()->productData()->getSet("prodinfo");
-    if(!$info) {
-        $this->logMsg("E", "data set named <prodinfo> seems to be broken:");
-        $this->logMsg("E", Dumper($info));
-        return $retval;
-    }
+    %targets = map { $_ => 1 } @targetmedia;
     foreach my $cd(keys(%targets)) {
-        $this->logMsg("I", "Creating content file on medium <$cd>:");
+        $this->logMsg("I", "Creating checksum file on medium <$cd>:");
         my $dir = $this->collect()->basesubdirs()->{$cd};
-        my $contentfile = "$dir/$this->{m_target}";
-        my $CONT = FileHandle -> new();
-        if (! $CONT -> open(">$contentfile")) {
-            $this->logMsg("E", "Cannot create <$contentfile> on medium <$cd>");
-            next;
-        }
-        # compute maxlen:
-        my $len = 0;
-        foreach(keys(%{$info})) {
-            my $l = length($info->{$_}->[0]);
-            $len = ($l>$len)?$l:$len;
-        }
-        $len++;
-        # ftp media special mode ?
-        my $coll = $this->{m_collect};
-        my $flavor = $coll->productData()->getVar("FLAVOR");
-        my $ftpmode = ($flavor =~ m{ftp}i);
-
-        $CONT -> close();
-        $this->logMsg(
-            "I", "Wrote file <$contentfile> for medium <$cd> successfully."
-        );
+        my $checksumfile = "$dir/$this->{m_target}";
+        chdir $dir;
+        system("find * -type f | grep -v '^\(repodata\|x86_64\|noarch\)/' | xargs sha256sum >$checksumfile");
         $retval++;
     }
     return $retval;
