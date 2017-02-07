@@ -295,16 +295,20 @@ sub createRepositoryMetadata {
     }
     # merge meta data
     $cmd = "mergerepo_c";
+    my $found;
     foreach my $p (@{$paths}) {
+      continue unless -d $p;
       $cmd .= " --repo=$p";
+      $found = 1;
     }
+    return unless $found;
     $call = $this -> callCmd($cmd);
     $status = $call->[0];
     my $out = join("\n",@{$call->[1]});
     $this->logMsg("I", "Called $cmd exit status: <$status> output: $out");
     # cleanup
     foreach my $p (@{$paths}) {
-      system("rm", "-rf", $p);
+      system("rm", "-rf", "$p/repodata");
     }
     # move merge repo in place
     system("mv", "merged_repo/repodata", "$masterpath/repodata");
