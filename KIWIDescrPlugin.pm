@@ -228,90 +228,75 @@ sub createRepositoryMetadata {
     my $cmd;
     my $call;
     my $status;
+    $cmd = "$this->{m_createrepo}";
+    $cmd .= " --unique-md-filenames";
+    $cmd .= " --checksum=sha256";
+    $cmd .= " --no-database";
+    $cmd .= " --repo=\"$repoid\"" if $repoid;
+    $cmd .= " --distro=\"$cpeid,$distroname\"" if $cpeid && $distroname;
+    if (@{$paths} > 1) {
+        $cmd .= " --split";
+        $cmd .= " --baseurl=media://";
+    }
     foreach my $p (@{$paths}) {
-        $cmd = "$this->{m_createrepo}";
-        $cmd .= " --unique-md-filenames";
-        $cmd .= " --checksum=sha256";
-        $cmd .= " --no-database";
-        $cmd .= " --repo=\"$repoid\"" if $repoid;
-        $cmd .= " --distro=\"$cpeid,$distroname\"" if $cpeid && $distroname;
         $cmd .= " $p";
-        $this->logMsg("I", "Executing command <$cmd>");
-        $call = $this -> callCmd($cmd);
-        $status = $call->[0];
-        if($status) {
-            my $out = join("\n",@{$call->[1]});
-            $this->logMsg("E",
-                "Called <$cmd> exit status: <$status> output: $out"
-            );
-            return 0;
-        }
-        $cmd = "$this->{m_rezip} $p ";
-        $this->logMsg("I", "Executing command <$cmd>");
-        $call = $this -> callCmd($cmd);
-        $status = $call->[0];
-        if($status) {
-            my $out = join("\n",@{$call->[1]});
-            $this->logMsg("E",
-                "Called <$cmd> exit status: <$status> output: $out"
-            );
-            return 0;
-        }
-        if (-x "/usr/bin/openSUSE-appstream-process")
-        {
-            $cmd = "/usr/bin/openSUSE-appstream-process";
-            $cmd .= " $p";
-            $cmd .= " $p/repodata";
-
-            $call = $this -> callCmd($cmd);
-            $status = $call->[0];
-            my $out = join("\n",@{$call->[1]});
-            $this->logMsg("I",
-                "Called $cmd exit status: <$status> output: $out"
-            );
-        }
-        if ( -f "/usr/bin/add_product_susedata" ) {
-            my $kwdfile = abs_path(
-                $this->collect()->{m_xml}->{xmlOrigFile}
-            );
-            $kwdfile =~ s/.kiwi$/.kwd/x;
-            $cmd = "/usr/bin/add_product_susedata";
-            $cmd .= " -u"; # unique filenames
-            $cmd .= " -k $kwdfile";
-            $cmd .= " -p"; # add diskusage data
-            $cmd .= " -e /usr/share/doc/packages/eulas";
-            $cmd .= " -d $p";
-            $this->logMsg("I", "Executing command <$cmd>");
-            $call = $this -> callCmd($cmd);
-            $status = $call->[0];
-            if($status) {
-                my $out = join("\n",@{$call->[1]});
-                $this->logMsg("E",
-                    "Called <$cmd> exit status: <$status> output: $out"
-                );
-                return 0;
-            }
-        }
     }
-    # merge meta data
-    $cmd = "mergerepo_c";
-    my $found;
-    foreach my $p (@{$paths}) {
-      continue unless -d $p;
-      $cmd .= " --repo=$p";
-      $found = 1;
-    }
-    return unless $found;
+    $this->logMsg("I", "Executing command <$cmd>");
     $call = $this -> callCmd($cmd);
     $status = $call->[0];
-    my $out = join("\n",@{$call->[1]});
-    $this->logMsg("I", "Called $cmd exit status: <$status> output: $out");
-    # cleanup
-    foreach my $p (@{$paths}) {
-      system("rm", "-rf", "$p/repodata");
+    if ($status) {
+        my $out = join("\n",@{$call->[1]});
+        $this->logMsg("E",
+            "Called <$cmd> exit status: <$status> output: $out"
+        );
+        return 0;
     }
-    # move merge repo in place
-    system("mv", "merged_repo/repodata", "$masterpath/repodata");
+    $cmd = "$this->{m_rezip} $masterpath ";
+    $this->logMsg("I", "Executing command <$cmd>");
+    $call = $this -> callCmd($cmd);
+    $status = $call->[0];
+    if($status) {
+        my $out = join("\n",@{$call->[1]});
+        $this->logMsg("E",
+            "Called <$cmd> exit status: <$status> output: $out"
+        );
+        return 0;
+    }
+    if (-x "/usr/bin/openSUSE-appstream-process")
+    {
+        $cmd = "/usr/bin/openSUSE-appstream-process";
+        $cmd .= " $masterpath";
+        $cmd .= " $masterpath/repodata";
+
+        $call = $this -> callCmd($cmd);
+        $status = $call->[0];
+        my $out = join("\n",@{$call->[1]});
+        $this->logMsg("I",
+            "Called $cmd exit status: <$status> output: $out"
+        );
+    }
+    if ( -f "/usr/bin/add_product_susedata" ) {
+        my $kwdfile = abs_path(
+            $this->collect()->{m_xml}->{xmlOrigFile}
+        );
+        $kwdfile =~ s/.kiwi$/.kwd/x;
+        $cmd = "/usr/bin/add_product_susedata";
+        $cmd .= " -u"; # unique filenames
+        $cmd .= " -k $kwdfile";
+        $cmd .= " -p"; # add diskusage data
+        $cmd .= " -e /usr/share/doc/packages/eulas";
+        $cmd .= " -d $masterpath";
+        $this->logMsg("I", "Executing command <$cmd>");
+        $call = $this -> callCmd($cmd);
+        $status = $call->[0];
+        if($status) {
+            my $out = join("\n",@{$call->[1]});
+            $this->logMsg("E",
+                "Called <$cmd> exit status: <$status> output: $out"
+            );
+            return 0;
+        }
+    }
     return 2;
 }
 

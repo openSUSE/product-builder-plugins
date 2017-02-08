@@ -112,6 +112,7 @@ sub execute {
         my $dir = $this->collect()->basesubdirs()->{$cd};
         my $checksumfile = "$dir/$this->{m_target}";
         chdir $dir;
+        # FIXME: find all rpm architecture directories reproducable
         system("find * -type f | grep -v '^\(repodata\|x86_64\|noarch\)/' | xargs sha256sum >$checksumfile");
         $retval++;
     }
