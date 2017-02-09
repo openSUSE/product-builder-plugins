@@ -90,19 +90,16 @@ sub new {
         $this->ready(1);
     }
     $this->requiredDirs($targetdir);
-    $this->{m_target} = "CHECKSUMS";
-    $this->{m_targetdir} = $targetdir;
     return $this;
 }
 
 sub signit {
-    my $this = shift;
+    my $signopts = shift;
     my $file = shift;
 
     if (-x "/usr/bin/sign") {
-          my $s1sum_opts = $this->{m_collect}->productData()->getVar("SHA1OPT");
-          system("sign $s1sum_opts -d $file");
-          system("sign $s1sum_opts -p > $file.key")
+          system("sign $signopts -d $file");
+          system("sign $signopts -p > $file.key")
 #    } else {
 #          system("gpg -a -b $file");
 #          KEY_ID=`gpg -b < /dev/null | gpg --list-packets | sed -n -e '/^:signature/s@.*keyid @\@p'`
@@ -121,12 +118,13 @@ sub execute {
         return $retval;
     }
     my @targetmedia = $this->collect()->getMediaNumbers();
+    my $signopts = $this->{m_collect}->productData()->getVar("SHA1OPT");
     my %targets;
     %targets = map { $_ => 1 } @targetmedia;
     foreach my $cd(keys(%targets)) {
         $this->logMsg("I", "Creating checksum file on medium <$cd>:");
         my $dir = $this->collect()->basesubdirs()->{$cd};
-        signit("$dir/repodata/repomd.xml");
+        signit($signopts, "$dir/repodata/repomd.xml");
         $retval++;
     }
     return $retval;
