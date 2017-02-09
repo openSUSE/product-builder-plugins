@@ -95,6 +95,22 @@ sub new {
     return $this;
 }
 
+sub signit {
+    my $this = shift;
+    my $file = shift;
+
+    if (-x "/usr/bin/sign") {
+          my $s1sum_opts = $this->{m_proddata}->getVar("SHA1OPT");
+          system("sign $s1sum_opts -d $file");
+          system("sign $s1sum_opts -p > $file.key")
+#    } else {
+#          system("gpg -a -b $file");
+#          KEY_ID=`gpg -b < /dev/null | gpg --list-packets | sed -n -e '/^:signature/s@.*keyid @\@p'`
+#          system("gpg --export --armor $KEY_ID > $file.key");
+    }
+}
+
+
 sub execute {
     my $this = shift;
     if(not ref($this)) {
@@ -110,10 +126,7 @@ sub execute {
     foreach my $cd(keys(%targets)) {
         $this->logMsg("I", "Creating checksum file on medium <$cd>:");
         my $dir = $this->collect()->basesubdirs()->{$cd};
-        my $checksumfile = "$dir/$this->{m_target}";
-        chdir $dir;
-        # FIXME: find all rpm architecture directories reproducable
-        system("find * -type f | grep -v '^\(repodata\|x86_64\|noarch\)/' | xargs sha256sum >$checksumfile");
+        signit("$dir/repodata/repomd.xml");
         $retval++;
     }
     return $retval;
