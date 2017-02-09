@@ -100,7 +100,7 @@ sub signit {
     my $file = shift;
 
     if (-x "/usr/bin/sign") {
-          my $s1sum_opts = $this->{m_proddata}->getVar("SHA1OPT");
+          my $s1sum_opts = $this->{m_collect}->productData()->getVar("SHA1OPT");
           system("sign $s1sum_opts -d $file");
           system("sign $s1sum_opts -p > $file.key")
 #    } else {
