@@ -132,29 +132,18 @@ sub executeDir {
     my $descrdir = $coll->productData()->getInfo("DESCRDIR");
     my $cpeid = $coll->productData()->getInfo("CPEID");
     my $repoid = $coll->productData()->getInfo("REPOID");
-    my $createrepomd = $coll->productData()->getVar("CREATE_REPOMD");
     my $metadataonly = $coll->productData()->getVar("RPMHDRS_ONLY");
     my $params = "$this->{m_params} -H" ? $metadataonly eq "true" : "$this->{m_params}";
-    ## this ugly bit creates a parameter string from a list of directories:
-    # param = -d <dir1> -d <dir2> ...
-    # the order is important. Idea: use map to make hash <dir> => -d for
-    # all subdirs not ending with "0" (those are for metafile unpacking
-    # only). The result is evaluated in list context be reverse, so
-    # there's a list looking like "<dir_N> -d ... <dir1> -d" which is
-    # reversed again, making the result '-d', '<dir1>', ..., '-d', '<dir_N>'",
-    # after the join as string.
-    # ---
-    if ( $createrepomd && $createrepomd eq "true" ) {
-        my $distroname = $coll->productData()->getInfo("DISTRIBUTION")."."
-                . $coll->productData()->getInfo("VERSION");
-        my $result = $this -> createRepositoryMetadata(
-            \@paths, $repoid, $distroname, $cpeid
-        );
-        # return values 0 || 1 indicates an error
-        if ($result != 2) {
-            return $result;
-        }
-    }
+
+    my $distroname = $coll->productData()->getInfo("DISTRIBUTION")."."
+            . $coll->productData()->getInfo("VERSION");
+    my $result = $this -> createRepositoryMetadata(
+        \@paths, $repoid, $distroname, $cpeid
+    );
+
+    # return values 0 || 1 indicates an error
+    return $result unless $result == 2;
+
     # insert translation files
 if (0) {
     my $trans_dir  = '/usr/share/locale/en_US/LC_MESSAGES';
