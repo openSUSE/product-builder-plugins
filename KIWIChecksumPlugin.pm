@@ -25,6 +25,7 @@ use base "KIWIBasePlugin";
 use FileHandle;
 use Data::Dumper;
 use Config::IniFiles;
+use File::Find;
 
 sub new {
     # ...
@@ -93,20 +94,13 @@ sub new {
     return $this;
 }
 
-sub signit {
-    my $signopts = shift;
-    my $file = shift;
+sub add_checksum
+{
+    my $file = $_;
+    return unless -f $file;
 
-    if (-x "/usr/bin/sign") {
-          system("sign $signopts -d $file");
-          system("sign $signopts -p > $file.key")
-#    } else {
-#          system("gpg -a -b $file");
-#          KEY_ID=`gpg -b < /dev/null | gpg --list-packets | sed -n -e '/^:signature/s@.*keyid @\@p'`
-#          system("gpg --export --armor $KEY_ID > $file.key");
-    }
+    KIWIQX::qxx("sha256sum $file >> CHECKSUMS");
 }
-
 
 sub execute {
     my $this = shift;
@@ -124,7 +118,12 @@ sub execute {
     foreach my $cd(keys(%targets)) {
         $this->logMsg("I", "Creating checksum file on medium <$cd>:");
         my $dir = $this->collect()->basesubdirs()->{$cd};
-        signit($signopts, "$dir/repodata/repomd.xml");
+        $this->logMsg("I", "Creating checksum file on medium <$cd>: $dir");
+        chdir($dir);
+        find({wanted => \&add_checksum, no_chdir=>1}, "boot");
+        find({wanted => \&add_checksum, no_chdir=>1}, "control.xml");
+        find({wanted => \&add_checksum, no_chdir=>1}, "license.tar.gz");
+
         $retval++;
     }
     return $retval;
