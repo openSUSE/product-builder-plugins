@@ -55,39 +55,22 @@ sub new {
     my $createrepo = $ini->val('base', 'createrepo');
     my $rezip      = $ini->val('base', 'rezip');
     my $enable     = $ini->val('base', 'defaultenable');
-    my @params     = $ini->val('options', 'parameter');
-    my $gzip       = $ini->val('target', 'compress');
     # if any of those isn't set, complain!
     if(not defined($name)
         or not defined($order)
         or not defined($createrepo)
         or not defined($rezip)
         or not defined($enable)
-        or not defined($gzip)
     ) {
         $this->logMsg("E",
             "Plugin ini file <$config> seems broken!"
         );
         return;
     }
-    my $params = "";
-    foreach my $p(@params) {
-        $p = $this->collect()->productData()->_substitute("$p");
-        $params .= "$p ";
-    }
-    # add local kwd files as argument
-    my $extrafile = abs_path($this->collect()->{m_xml}->{xmlOrigFile});
-    $extrafile =~ s/.kiwi$/.kwd/x;
-    if (-f $extrafile) {
-        $this->logMsg("W", "Found extra tags file $extrafile.");
-        $params .= "-T $extrafile ";
-    }
     $this->name($name);
     $this->order($order);
     $this->{m_createrepo} = $createrepo;
     $this->{m_rezip} = $rezip;
-    $this->{m_params} = $params;
-    $this->{m_compress} = $gzip;
     if($enable != 0) {
         $this->ready(1);
     }
@@ -129,7 +112,6 @@ sub executeDir {
         return 0;
     }
     my $coll  = $this->{m_collect};
-    my $descrdir = $coll->productData()->getInfo("DESCRDIR");
     my $cpeid = $coll->productData()->getInfo("CPEID");
     my $repoid = $coll->productData()->getInfo("REPOID");
     my $metadataonly = $coll->productData()->getVar("RPMHDRS_ONLY");
@@ -141,68 +123,6 @@ sub executeDir {
         \@paths, $repoid, $distroname, $cpeid
     );
 
-    # return values 0 || 1 indicates an error
-    return $result unless $result == 2;
-
-    # insert translation files
-if (0) {
-    my $trans_dir  = '/usr/share/locale/en_US/LC_MESSAGES';
-    my $trans_glob = 'package-translations-*.mo';
-    foreach my $trans (glob($trans_dir.'/'.$trans_glob)) {
-        $trans = basename($trans, ".mo");
-        $trans =~ s,.*-,,x;
-        $cmd = "/usr/bin/translate_packages.pl $trans "
-            . "< packages.en "
-            . "> packages.$trans";
-        $call = $this -> callCmd($cmd);
-        $status = $call->[0];
-        if($status) {
-            my $out = join("\n",@{$call->[1]});
-            $this->logMsg("E",
-                "Called <$cmd> exit status: <$status> output: $out"
-            );
-            return 1;
-        }
-    }
-    # one more time for english to insert possible EULAs
-    $cmd = "/usr/bin/translate_packages.pl en "
-        . "< packages.en "
-        . "> packages.en.new && "
-        . "mv packages.en.new packages.en";
-    $call = $this -> callCmd($cmd);
-    $status = $call->[0];
-    if ($status) {
-        my $out = join("\n",@{$call->[1]});
-        $this->logMsg("E",
-            "Called <$cmd> exit status: <$status> output: $out"
-        );
-        return 1;
-    }
-}
-    if (-x "/usr/bin/openSUSE-appstream-process") {
-        foreach my $p (@paths) {
-            $cmd = "/usr/bin/openSUSE-appstream-process";
-            $cmd .= " $p";
-            $cmd .= " $p/$descrdir";
-            $call = $this -> callCmd($cmd);
-            $status = $call->[0];
-            my $out = join("\n",@{$call->[1]});
-            $this->logMsg("I",
-                "Called <$cmd> exit status: <$status> output: $out"
-            );
-        };
-    }
-    if($this->{m_compress} =~ m{yes}i) {
-        foreach my $pfile(glob("packages*")) {
-            if(system("gzip", "--rsyncable", "$pfile") == 0) {
-                unlink "$pfile";
-            } else {
-                $this->logMsg("W",
-                    "Can't compress file <$pfile>!"
-                );
-            }
-        }
-    }
     return 1;
 }
 
@@ -251,6 +171,7 @@ sub createRepositoryMetadata {
         );
         return 0;
     }
+
     if (-x "/usr/bin/openSUSE-appstream-process")
     {
         $cmd = "/usr/bin/openSUSE-appstream-process";
@@ -264,28 +185,7 @@ sub createRepositoryMetadata {
             "Called $cmd exit status: <$status> output: $out"
         );
     }
-    if ( -f "/usr/bin/add_product_susedata" ) {
-        my $kwdfile = abs_path(
-            $this->collect()->{m_xml}->{xmlOrigFile}
-        );
-        $kwdfile =~ s/.kiwi$/.kwd/x;
-        $cmd = "/usr/bin/add_product_susedata";
-        $cmd .= " -u"; # unique filenames
-        $cmd .= " -k $kwdfile";
-        $cmd .= " -p"; # add diskusage data
-        $cmd .= " -e /usr/share/doc/packages/eulas";
-        $cmd .= " -d $masterpath";
-        $this->logMsg("I", "Executing command <$cmd>");
-        $call = $this -> callCmd($cmd);
-        $status = $call->[0];
-        if($status) {
-            my $out = join("\n",@{$call->[1]});
-            $this->logMsg("E",
-                "Called <$cmd> exit status: <$status> output: $out"
-            );
-            return 0;
-        }
-    }
+
     return 2;
 }
 
