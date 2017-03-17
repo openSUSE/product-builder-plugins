@@ -112,7 +112,6 @@ sub execute {
         return $retval;
     }
     my @targetmedia = $this->collect()->getMediaNumbers();
-    my $signopts = $this->{m_collect}->productData()->getVar("SHA1OPT");
     my %targets;
     %targets = map { $_ => 1 } @targetmedia;
     foreach my $cd(keys(%targets)) {
@@ -121,11 +120,21 @@ sub execute {
         $this->logMsg("I", "Creating checksum file on medium <$cd>: $dir");
         chdir($dir);
         find({wanted => \&add_checksum, no_chdir=>1}, "boot");
-        find({wanted => \&add_checksum, no_chdir=>1}, "control.xml");
+        find({wanted => \&add_checksum, no_chdir=>1}, "EFI");
         find({wanted => \&add_checksum, no_chdir=>1}, "license.tar.gz");
 
         $retval++;
     }
+
+    if (-e "CHECKSUMS") {
+      # FIXME: add also local sign support
+      open(my $fh, '>', 'CHECKSUMS.key');
+      print $fh "\0" x 8192;
+      seek($fh, 0, 0);
+      print $fh "sIGnMeP\n";
+      close $fh;
+    }
+
     return $retval;
 }
 

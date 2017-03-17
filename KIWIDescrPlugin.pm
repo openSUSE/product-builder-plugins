@@ -186,6 +186,15 @@ sub createRepositoryMetadata {
         );
     }
 
+    if (-e "repodata/repomd.xml") {
+      # FIXME: add also local sign support
+      open(my $fh, '>', 'repodata/repomd.xml.key');
+      print $fh "\0" x 8192;
+      seek($fh, 0, 0);
+      print $fh "sIGnMeP\n";
+      close $fh;
+    }
+
     return 2;
 }
 
