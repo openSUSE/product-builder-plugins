@@ -53,6 +53,7 @@ sub new {
     my $name       = $ini->val('base', 'name');
     my $order      = $ini->val('base', 'order');
     my $createrepo = $ini->val('base', 'createrepo');
+    my $modifyrepo = $ini->val('base', 'modifyrepo');
     my $rezip      = $ini->val('base', 'rezip');
     my $enable     = $ini->val('base', 'defaultenable');
     # if any of those isn't set, complain!
@@ -70,6 +71,7 @@ sub new {
     $this->name($name);
     $this->order($order);
     $this->{m_createrepo} = $createrepo;
+    $this->{m_modifyrepo} = $modifyrepo;
     $this->{m_rezip} = $rezip;
     if($enable != 0) {
         $this->ready(1);
@@ -186,9 +188,23 @@ sub createRepositoryMetadata {
         );
     }
 
-    if (-e "repodata/repomd.xml") {
+    if (-e "$masterpath/repodata/repomd.xml") {
+      if (-e "$masterpath/license.tar.gz") {
+        $cmd = "$this->{m_modifyrepo}";
+        $cmd .= " --unique-md-filenames";
+        $cmd .= " --checksum=sha256";
+        $cmd .= " $masterpath/license.tar.gz $masterpath/repodata";
+
+        $call = $this -> callCmd($cmd);
+        $status = $call->[0];
+        my $out = join("\n",@{$call->[1]});
+        $this->logMsg("I",
+            "Called $cmd exit status: <$status> output: $out"
+        );
+      }
+
       # FIXME: add also local sign support
-      open(my $fh, '>', 'repodata/repomd.xml.asc');
+      open(my $fh, '>', "$masterpath/repodata/repomd.xml.asc");
       print $fh "\0" x 8192;
       seek($fh, 0, 0);
       print $fh "sIGnMeP\n";
