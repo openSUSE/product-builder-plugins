@@ -127,12 +127,13 @@ sub execute {
     }
 
     if (-e "CHECKSUMS") {
-      # FIXME: add also local sign support
-      open(my $fh, '>', 'CHECKSUMS.asc');
-      print $fh "\0" x 8192;
-      seek($fh, 0, 0);
-      print $fh "sIGnMeP\n";
-      close $fh;
+      my $cmd = "sign -p CHECKSUMS";
+      my $call = $this -> callCmd($cmd);
+      my $status = $call->[0];
+      my $out = join("\n",@{$call->[1]});
+      $this->logMsg("I",
+          "Called $cmd exit status: <$status> output: $out"
+      );
     }
 
     return $retval;

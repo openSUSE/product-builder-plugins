@@ -203,12 +203,13 @@ sub createRepositoryMetadata {
         );
       }
 
-      # FIXME: add also local sign support
-      open(my $fh, '>', "$masterpath/repodata/repomd.xml.asc");
-      print $fh "\0" x 8192;
-      seek($fh, 0, 0);
-      print $fh "sIGnMeP\n";
-      close $fh;
+      $cmd = "sign -p $masterpath/repodata/repomd.xml";
+      $call = $this -> callCmd($cmd);
+      $status = $call->[0];
+      my $out = join("\n",@{$call->[1]});
+      $this->logMsg("I",
+          "Called $cmd exit status: <$status> output: $out"
+      );
     }
 
     return 2;
