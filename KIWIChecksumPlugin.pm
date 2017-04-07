@@ -127,7 +127,7 @@ sub execute {
     }
 
     if (-e "CHECKSUMS") {
-      my $cmd = "sign -p CHECKSUMS";
+      my $cmd = "sign -d CHECKSUMS";
       my $call = $this -> callCmd($cmd);
       my $status = $call->[0];
       my $out = join("\n",@{$call->[1]});

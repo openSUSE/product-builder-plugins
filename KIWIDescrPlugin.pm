@@ -203,7 +203,7 @@ sub createRepositoryMetadata {
         );
       }
 
-      $cmd = "sign -p $masterpath/repodata/repomd.xml";
+      $cmd = "sign -d $masterpath/repodata/repomd.xml";
       $call = $this -> callCmd($cmd);
       $status = $call->[0];
       my $out = join("\n",@{$call->[1]});
