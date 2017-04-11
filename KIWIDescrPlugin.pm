@@ -190,10 +190,17 @@ sub createRepositoryMetadata {
 
     if (-e "$masterpath/repodata/repomd.xml") {
       if (-e "$masterpath/license.tar.gz") {
+        $cmd = "gzip -d $masterpath/license.tar.gz";
+        my $out = join("\n",@{$call->[1]});
+        $this->logMsg("I",
+            "Called $cmd exit status: <$status> output: $out"
+        );
+      }
+      if (-e "$masterpath/license.tar") {
         $cmd = "$this->{m_modifyrepo}";
         $cmd .= " --unique-md-filenames";
         $cmd .= " --checksum=sha256";
-        $cmd .= " $masterpath/license.tar.gz $masterpath/repodata";
+        $cmd .= " $masterpath/license.tar $masterpath/repodata";
 
         $call = $this -> callCmd($cmd);
         $status = $call->[0];
