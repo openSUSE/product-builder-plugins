@@ -120,6 +120,7 @@ sub execute {
         $this->logMsg("I", "Creating checksum file on medium <$cd>: $dir");
         chdir($dir);
         find({wanted => \&add_checksum, no_chdir=>1}, "boot");
+        find({wanted => \&add_checksum, no_chdir=>1}, "docu");
         find({wanted => \&add_checksum, no_chdir=>1}, "EFI");
         find({wanted => \&add_checksum, no_chdir=>1}, "license.tar.gz");
 
