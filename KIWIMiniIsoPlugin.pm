@@ -129,18 +129,12 @@ sub execute {
         sub { find_cb($this, '.*/root$', \@rootfiles) },
         $this->handler()->collect()->basedir()
     );
-    if (@rootfiles) {
-        $this->removeInstallSystem($rootfiles[0]);
-    }
 
     my @isolxfiles;
     find(
         sub { find_cb($this, '.*/isolinux.cfg$', \@isolxfiles) },
         $this->handler()->collect()->basedir()
     );
-    if (@isolxfiles) {
-        $this->removeMediaCheck($isolxfiles[0]);
-    }
 
     $this -> updateInitRDNET("./etc/linuxrc.d/10_repo", "defaultrepo=$repoloc\n");
     $this -> updateInitRDNET("./etc/linuxrc.d/16_instsys", "instsys=disk:boot/___INITRD_ARCH___/root\n");
@@ -163,66 +157,6 @@ sub execute {
     );
 
     return $retval;
-}
-
-sub removeInstallSystem {
-    my $this = shift;
-    my $rootfile = shift;
-
-    print STDERR "RF $rootfile\n";
-    my $rootdir = dirname($rootfile);
-    $this->logMsg("I", "removing files from <$rootdir>");
-    foreach my $file (glob("$rootdir/*")) {
-        if (-f $file && $file !~ m,/(efi|linux|initrd)$,) {
-            $this->logMsg("I", "removing <$file>");
-	    unlink $file;
-        }
-    }
-    return $this;
-}
-
-sub removeMediaCheck {
-	my $this = shift;
-	my $cfg = shift;
-
-	$this->logMsg("I", "Processing file <$cfg>: ");
-
-    my $CFG = FileHandle -> new();
-    if (! $CFG -> open($cfg)) {
-		$this->logMsg("E", "Cant open file <$cfg>!");
-		return;
-	}
-
-    my $CFGNEW = FileHandle -> new();
-    if (! $CFGNEW -> open(">$cfg.new")) {
-		$this->logMsg("E", "Cant open file <$cfg.new>!");
-		return;
-	}
-
-	my $mediacheck = -1;
-	while ( <$CFG> ) {
-		chomp;
-
-		if (m/label mediachk/) {
-			$mediacheck = 1;
-		}
-		if ($mediacheck == 1 && m/^\s*$/) {
-			$mediacheck = -1;
-		}
-
-		if ($mediacheck == 1) {
-			print $CFGNEW "#$_\n";
-		} else {
-			print $CFGNEW "$_\n";
-		}
-	}
-
-	$CFG -> close();
-	$CFGNEW -> close();
-
-	unlink $cfg;
-	rename "$cfg.new", $cfg;
-    return $this;
 }
 
 sub updateGraphicsBootConfig {
