@@ -282,6 +282,7 @@ sub updateInitRDNET {
         $iarch =~ s/\/.*//;
         my $_content = $content;
         $_content =~ s/___INITRD_ARCH___/$iarch/g;
+        $this -> logMsg("I", " set parameter: $_content");
         my ($cpio, $pad) = _makecpiohead($file, [0, 0, oct(644), 1, 0, 0, 0, length($_content), 0, 0, 0]);
         $cpio .= $_content;
         $cpio .= $pad if $pad;
