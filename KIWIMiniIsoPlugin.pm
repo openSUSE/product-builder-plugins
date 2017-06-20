@@ -129,6 +129,9 @@ sub execute {
         sub { find_cb($this, '.*/root$', \@rootfiles) },
         $this->handler()->collect()->basedir()
     );
+    if (@rootfiles) {
+        $this->removeRepoData($rootfiles[0]);
+    }
 
     my @isolxfiles;
     find(
@@ -157,6 +160,22 @@ sub execute {
     );
 
     return $retval;
+}
+
+sub removeRepoData {
+    my $this = shift;
+    my $rootfile = shift;
+
+    print STDERR "RF $rootfile\n";
+    my $rootdir = dirname($rootfile);
+    $this->logMsg("I", "removing files from <$rootdir>");
+    foreach my $file (glob("$rootdir/*")) {
+        if (-f $file && $file !~ m,/repodata$,) {
+            $this->logMsg("I", "removing <$file>");
+	    unlink $file;
+        }
+    }
+    return $this;
 }
 
 sub updateGraphicsBootConfig {
