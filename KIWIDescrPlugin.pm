@@ -188,6 +188,29 @@ sub createRepositoryMetadata {
         );
     }
 
+    if ( -f "/usr/bin/add_product_susedata" ) {
+        my $kwdfile = abs_path(
+            $this->collect()->{m_xml}->{xmlOrigFile}
+        );
+        $kwdfile =~ s/.kiwi$/.kwd/x;
+        $cmd = "/usr/bin/add_product_susedata";
+        $cmd .= " -u"; # unique filenames
+        $cmd .= " -k $kwdfile";
+        $cmd .= " -p"; # add diskusage data
+        $cmd .= " -e /usr/share/doc/packages/eulas";
+        $cmd .= " -d $masterpath";
+        $this->logMsg("I", "Executing command <$cmd>");
+        $call = $this -> callCmd($cmd);
+        $status = $call->[0];
+        if($status) {
+            my $out = join("\n",@{$call->[1]});
+            $this->logMsg("E",
+                "Called <$cmd> exit status: <$status> output: $out"
+            );
+            return 0;
+        }
+    }
+
     if (-e "$masterpath/repodata/repomd.xml") {
       if (-e "$masterpath/license.tar.gz") {
         $cmd = "gzip -d $masterpath/license.tar.gz";
