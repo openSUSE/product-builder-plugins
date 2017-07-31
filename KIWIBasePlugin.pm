@@ -215,7 +215,7 @@ sub getSubdirLists {
     my @paths = values(%{$basesubdirs});
     @paths = grep { $_ =~ /[^0]$/x } @paths; # remove Media0
     my %path = map { $_ => 1 } @paths;
-    if($flavor =~ m{ftp}i) {
+    if($flavor =~ m{ftp}i || $flavor =~ m{pool}i) {
         # 1: FTP tree, all subdirs get a separate call.
         my @d = sort(keys(%path));
         foreach(@d) {
