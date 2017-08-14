@@ -214,6 +214,9 @@ sub createRepositoryMetadata {
     if (-e "$masterpath/repodata/repomd.xml") {
       if (-e "$masterpath/license.tar.gz") {
         $cmd = "gzip -d $masterpath/license.tar.gz";
+
+        $call = $this -> callCmd($cmd);
+        $status = $call->[0];
         my $out = join("\n",@{$call->[1]});
         $this->logMsg("I",
             "Called $cmd exit status: <$status> output: $out"
@@ -231,6 +234,7 @@ sub createRepositoryMetadata {
         $this->logMsg("I",
             "Called $cmd exit status: <$status> output: $out"
         );
+        unlink "$masterpath/license.tar";
       }
 
       $cmd = "sign -d $masterpath/repodata/repomd.xml";
