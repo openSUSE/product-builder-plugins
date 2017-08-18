@@ -119,22 +119,21 @@ sub execute {
         my $dir = $this->collect()->basesubdirs()->{$cd};
         $this->logMsg("I", "Creating checksum file on medium <$cd>: $dir");
         chdir($dir);
-        find({wanted => \&add_checksum, no_chdir=>1}, "boot");
-        find({wanted => \&add_checksum, no_chdir=>1}, "docu");
-        find({wanted => \&add_checksum, no_chdir=>1}, "EFI");
-        find({wanted => \&add_checksum, no_chdir=>1}, "license.tar.gz");
+        find({wanted => \&add_checksum, no_chdir=>1}, "boot"); #	if -d "boot";
+        find({wanted => \&add_checksum, no_chdir=>1}, "docu") if -d "docu";
+        find({wanted => \&add_checksum, no_chdir=>1}, "EFI")  if -d "EFI";
 
         $retval++;
-    }
 
-    if (-e "CHECKSUMS") {
-      my $cmd = "sign -d CHECKSUMS";
-      my $call = $this -> callCmd($cmd);
-      my $status = $call->[0];
-      my $out = join("\n",@{$call->[1]});
-      $this->logMsg("I",
-          "Called $cmd exit status: <$status> output: $out"
-      );
+        if (-e "CHECKSUMS") {
+          my $cmd = "sign -d CHECKSUMS";
+          my $call = $this -> callCmd($cmd);
+          my $status = $call->[0];
+          my $out = join("\n",@{$call->[1]});
+          $this->logMsg("I",
+              "Called $cmd exit status: <$status> output: $out"
+          );
+        }
     }
 
     return $retval;
