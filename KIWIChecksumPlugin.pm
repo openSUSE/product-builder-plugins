@@ -119,9 +119,10 @@ sub execute {
         my $dir = $this->collect()->basesubdirs()->{$cd};
         $this->logMsg("I", "Creating checksum file on medium <$cd>: $dir");
         chdir($dir);
-        find({wanted => \&add_checksum, no_chdir=>1}, "boot"); #	if -d "boot";
-        find({wanted => \&add_checksum, no_chdir=>1}, "docu") if -d "docu";
+        find({wanted => \&add_checksum, no_chdir=>1}, "boot") if -d "boot";
         find({wanted => \&add_checksum, no_chdir=>1}, "EFI")  if -d "EFI";
+        find({wanted => \&add_checksum, no_chdir=>1}, "docu") if -d "docu";
+        find({wanted => \&add_checksum, no_chdir=>1}, "media.1") if -d "media.1";
 
         $retval++;
 
