@@ -237,7 +237,17 @@ sub createRepositoryMetadata {
         unlink "$masterpath/license.tar";
       }
 
+      # detached signature
       $cmd = "sign -d $masterpath/repodata/repomd.xml";
+      $call = $this -> callCmd($cmd);
+      $status = $call->[0];
+      my $out = join("\n",@{$call->[1]});
+      $this->logMsg("I",
+          "Called $cmd exit status: <$status> output: $out"
+      );
+
+      # detached pubkey
+      $cmd = "sign -p > $masterpath/repodata/repomd.xml.key";
       $call = $this -> callCmd($cmd);
       $status = $call->[0];
       my $out = join("\n",@{$call->[1]});
