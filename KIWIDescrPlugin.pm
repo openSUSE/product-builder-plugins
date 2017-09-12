@@ -128,6 +128,42 @@ sub executeDir {
     return 1;
 }
 
+sub addLicenseFile {
+    my @params = @_;
+    my $this        = $params[0];
+    my $masterpath  = $params[1];
+    my $licensename = $params[2];
+
+    my $call;
+    my $cmd;
+    my $status;
+
+    if (-e "$masterpath/$licensename.tar.gz") {
+      $cmd = "gzip -d $masterpath/$licensename.tar.gz";
+
+      $call = $this -> callCmd($cmd);
+      $status = $call->[0];
+      my $out = join("\n",@{$call->[1]});
+      $this->logMsg("I",
+          "Called $cmd exit status: <$status> output: $out"
+      );
+    }
+    if (-e "$masterpath/$licensename.tar") {
+      $cmd = "$this->{m_modifyrepo}";
+      $cmd .= " --unique-md-filenames";
+      $cmd .= " --checksum=sha256";
+      $cmd .= " $masterpath/$licensename.tar $masterpath/repodata";
+
+      $call = $this -> callCmd($cmd);
+      $status = $call->[0];
+      my $out = join("\n",@{$call->[1]});
+      $this->logMsg("I",
+          "Called $cmd exit status: <$status> output: $out"
+      );
+      unlink "$masterpath/license.tar";
+    }
+}
+
 sub createRepositoryMetadata {
     my @params = @_;
     my $this       = $params[0];
@@ -139,6 +175,8 @@ sub createRepositoryMetadata {
     my $cmd;
     my $call;
     my $status;
+    my $coll = $this->{m_collect};
+
     $cmd = "$this->{m_createrepo}";
     $cmd .= " --unique-md-filenames";
     $cmd .= " --checksum=sha256";
@@ -212,29 +250,13 @@ sub createRepositoryMetadata {
     }
 
     if (-e "$masterpath/repodata/repomd.xml") {
-      if (-e "$masterpath/license.tar.gz") {
-        $cmd = "gzip -d $masterpath/license.tar.gz";
 
-        $call = $this -> callCmd($cmd);
-        $status = $call->[0];
-        my $out = join("\n",@{$call->[1]});
+      $this->addLicenseFile($masterpath, "license");
+      foreach my $product (@{$coll->{m_products}}) {
         $this->logMsg("I",
-            "Called $cmd exit status: <$status> output: $out"
+            "Check for $product license file"
         );
-      }
-      if (-e "$masterpath/license.tar") {
-        $cmd = "$this->{m_modifyrepo}";
-        $cmd .= " --unique-md-filenames";
-        $cmd .= " --checksum=sha256";
-        $cmd .= " $masterpath/license.tar $masterpath/repodata";
-
-        $call = $this -> callCmd($cmd);
-        $status = $call->[0];
-        my $out = join("\n",@{$call->[1]});
-        $this->logMsg("I",
-            "Called $cmd exit status: <$status> output: $out"
-        );
-        unlink "$masterpath/license.tar";
+        $this->addLicenseFile($masterpath, "license.$product");
       }
 
       # detached signature
@@ -247,10 +269,10 @@ sub createRepositoryMetadata {
       );
 
       # detached pubkey
-      $cmd = "sign -p > $masterpath/repodata/repomd.xml.key";
+      $cmd = "sign -p $masterpath/repodata/repomd.xml > $masterpath/repodata/repomd.xml.key";
       $call = $this -> callCmd($cmd);
       $status = $call->[0];
-      my $out = join("\n",@{$call->[1]});
+      $out = join("\n",@{$call->[1]});
       $this->logMsg("I",
           "Called $cmd exit status: <$status> output: $out"
       );
