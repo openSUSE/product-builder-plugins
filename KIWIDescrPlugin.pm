@@ -160,7 +160,7 @@ sub addLicenseFile {
       $this->logMsg("I",
           "Called $cmd exit status: <$status> output: $out"
       );
-      unlink "$masterpath/license.tar";
+      unlink "$masterpath/$licensename.tar";
     }
 }
 
@@ -256,7 +256,7 @@ sub createRepositoryMetadata {
         $this->logMsg("I",
             "Check for $product license file"
         );
-        $this->addLicenseFile($masterpath, "license.$product");
+        $this->addLicenseFile($masterpath, "license-$product");
       }
 
       # detached signature
