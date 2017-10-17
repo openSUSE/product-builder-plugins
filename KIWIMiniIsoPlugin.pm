@@ -140,7 +140,6 @@ sub execute {
     );
 
     $this -> updateInitRDNET("./etc/linuxrc.d/10_repo", "defaultrepo=$repoloc\n");
-    $this -> updateInitRDNET("./etc/linuxrc.d/16_instsys", "instsys=disk:boot/___INITRD_ARCH___/root\n");
 
     my @gfxbootfiles;
     find(
