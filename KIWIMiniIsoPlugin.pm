@@ -138,7 +138,7 @@ sub execute {
     );
 
     $this -> updateInitRDNET("./etc/linuxrc.d/10_repo", "defaultrepo=$repoloc\n");
-    $this -> updateInitRDNET("./etc/linuxrc.d/16_instsys", "instsys=disk:boot/___INITRD_ARCH___/root\n");
+    $this -> updateInitRDNET("./etc/linuxrc.d/15_kexec", "kexec=1\n");
 
     my @gfxbootfiles;
     find(
@@ -276,6 +276,11 @@ sub updateInitRDNET {
     # hardcode for now
     $zipper = "xz --check=crc32";
 
+    my ($cpio, $pad) = _makecpiohead($file, [0, 0, oct(644), 1, 0, 0, 0, length($content), 0, 0, 0]);
+    $cpio .= $content;
+    $cpio .= $pad if $pad;
+    $cpio .= _makecpiohead();
+
     my @initrdfiles;
     find(
         sub { find_cb($this, '.*/initrd$', \@initrdfiles) },
@@ -286,18 +291,6 @@ sub updateInitRDNET {
 
     for my $initrd (@initrdfiles) {
         $this -> logMsg("I", "updating $initrd");
-
-        my $iarch = $initrd;
-        $iarch =~ s/.*\/boot\///;
-        $iarch =~ s/\/.*//;
-        my $_content = $content;
-        $_content =~ s/___INITRD_ARCH___/$iarch/g;
-        $this -> logMsg("I", " set parameter: $_content");
-        my ($cpio, $pad) = _makecpiohead($file, [0, 0, oct(644), 1, 0, 0, 0, length($_content), 0, 0, 0]);
-        $cpio .= $_content;
-        $cpio .= $pad if $pad;
-        $cpio .= _makecpiohead();
-
         my $fh  = FileHandle -> new();
         if (! $fh -> open("|$zipper -c >> $initrd")) {
         #if (! $fh -> open(">$initrd.append")) {
