@@ -138,7 +138,6 @@ sub execute {
     );
 
     $this -> updateInitRDNET("./etc/linuxrc.d/10_repo", "defaultrepo=$repoloc\n");
-    $this -> updateInitRDNET("./etc/linuxrc.d/15_kexec", "kexec=1\n");
 
     my @gfxbootfiles;
     find(
