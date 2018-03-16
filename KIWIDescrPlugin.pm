@@ -138,6 +138,25 @@ sub addLicenseFile {
       );
     }
     if (-e "$masterpath/$licensename.tar") {
+      my $external_license_dir = $masterpath.".license";
+      $this->logMsg("I", "Extracting license.tar");
+      system("mkdir $media_license_dir");
+      $result = $? >> 8;
+      if ($result != 0) {
+          $this->logMsg( "E", "mkdir failed!");
+          return 1;
+      }
+      system("tar xf $$masterpath/$licensename.tar -C $external_license_dir");
+      $result = $? >> 8;
+      if ($result != 0) {
+          $this->logMsg( "E", "Untar failed!");
+          return 1;
+      }
+      if ( ! -e "$external_license_dir/license.txt" ) {
+          $this->logMsg( "E", "No license.txt extracted!");
+          return 1;
+      }
+
       $cmd = "$this->{m_modifyrepo}";
       $cmd .= " --unique-md-filenames";
       $cmd .= " --checksum=sha256";
