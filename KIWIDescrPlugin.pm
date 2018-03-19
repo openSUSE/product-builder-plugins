@@ -140,9 +140,7 @@ sub addLicenseFile {
     if (-e "$masterpath/$licensename.tar") {
       my $external_license_dir = $masterpath.".license";
       $this->logMsg("I", "Extracting license.tar");
-      system("mkdir $media_license_dir");
-      $result = $? >> 8;
-      if ($result != 0) {
+      if (system("mkdir -p $external_license_dir")) {
           $this->logMsg( "E", "mkdir failed!");
           return 1;
       }
