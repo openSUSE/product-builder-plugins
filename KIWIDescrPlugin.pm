@@ -151,11 +151,11 @@ sub addLicenseFile {
     if (-e "$masterpath/$licensename.tar") {
       my $external_license_dir = $masterpath.".license";
       $this->logMsg("I", "Extracting license.tar");
-      if (!system("mkdir $external_license_dir")) {
+      if (system("mkdir $external_license_dir")) {
           $this->logMsg( "E", "mkdir failed!");
           return 1;
       }
-      if (!system("tar xf $masterpath/$licensename.tar -C $external_license_dir")) {
+      if (system("tar xf $masterpath/$licensename.tar -C $external_license_dir")) {
           $this->logMsg( "E", "Untar failed!");
           return 1;
       }
