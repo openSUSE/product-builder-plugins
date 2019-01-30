@@ -169,7 +169,7 @@ sub createRepositoryMetadata {
     my $this       = $params[0];
     my $paths      = $params[1];
     my $masterpath = @{$paths}[0];
-    my $repoid     = $params[2];
+    my $repoids    = $params[2];
     my $distroname = $params[3];
     my $cpeid      = $params[4];
     my $cmd;
@@ -181,7 +181,9 @@ sub createRepositoryMetadata {
     $cmd .= " --unique-md-filenames";
     $cmd .= " --checksum=sha256";
     $cmd .= " --no-database";
-    $cmd .= " --repo=\"$repoid\"" if $repoid;
+    foreach my $repoid (split(/\s+/, $repoids)) {
+        $cmd .= " --repo=\"$repoid\"";
+    }
     $cmd .= " --distro=\"$cpeid,$distroname\"" if $cpeid && $distroname;
     if (@{$paths} > 1) {
         $cmd .= " --split";
