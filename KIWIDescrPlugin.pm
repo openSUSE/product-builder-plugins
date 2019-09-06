@@ -179,6 +179,7 @@ sub createRepositoryMetadata {
 
     $cmd = "$this->{m_createrepo}";
     $cmd .= " --unique-md-filenames";
+    $cmd .= " --excludes=*/boot/*";
     $cmd .= " --checksum=sha256";
     $cmd .= " --no-database";
     foreach my $repoid (split(/\s+/, $repoids)) {
