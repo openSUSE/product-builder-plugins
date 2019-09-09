@@ -179,7 +179,9 @@ sub createRepositoryMetadata {
 
     $cmd = "$this->{m_createrepo}";
     $cmd .= " --unique-md-filenames";
-    $cmd .= " --excludes=*/boot/*";
+    # the glob is only matching on files, so we need it for every directory depth
+    $cmd .= " --excludes=boot/*.rpm";
+    $cmd .= " --excludes=boot/*/*.rpm";
     $cmd .= " --checksum=sha256";
     $cmd .= " --no-database";
     foreach my $repoid (split(/\s+/, $repoids)) {
