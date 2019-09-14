@@ -114,15 +114,11 @@ sub executeDir {
         return 0;
     }
     my $coll  = $this->{m_collect};
-    my $cpeid = $coll->productData()->getInfo("CPEID");
     my $repoid = $coll->productData()->getInfo("REPOID");
-    my $metadataonly = $coll->productData()->getVar("RPMHDRS_ONLY");
-    my $params = "$this->{m_params} -H" ? $metadataonly eq "true" : "$this->{m_params}";
 
-    my $distroname = $coll->productData()->getInfo("DISTRIBUTION")."."
-            . $coll->productData()->getInfo("VERSION");
+    my $distroname = $coll->productData()->getInfo("DISTRO");
     my $result = $this -> createRepositoryMetadata(
-        \@paths, $repoid, $distroname, $cpeid
+        \@paths, $repoid, $distroname
     );
 
     return 1;
@@ -187,7 +183,6 @@ sub createRepositoryMetadata {
     my $masterpath = @{$paths}[0];
     my $repoids    = $params[2];
     my $distroname = $params[3];
-    my $cpeid      = $params[4];
     my $cmd;
     my $call;
     my $status;
@@ -203,7 +198,7 @@ sub createRepositoryMetadata {
     foreach my $repoid (split(/\s+/, $repoids)) {
         $cmd .= " --repo=\"$repoid\"";
     }
-    $cmd .= " --distro=\"$cpeid,$distroname\"" if $cpeid && $distroname;
+    $cmd .= " --distro=\"$distroname\"" if $distroname;
     if (@{$paths} > 1) {
         $cmd .= " --split";
         $cmd .= " --baseurl=media://";
