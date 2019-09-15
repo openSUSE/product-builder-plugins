@@ -53,16 +53,34 @@ sub execute {
     $this->logMsg("I", "Basedir " . $this->handler()->collect()->basedir());
     my @targetmedia = $this->collect()->getMediaNumbers();
     foreach my $cd (@targetmedia) {
-        $this->logMsg("I", "Check <$cd>:");
+        $this->logMsg("I", "Check <$cd>");
         my $dir = $this->collect()->basesubdirs()->{$cd};
+        open(my $report, '>', "$dir.report");
+        print $report "<report>\n";
         $this->logMsg("I", "Pass $dir");
-        for my $module (glob('/usr/src/packages//KIWIALL/*')) {
+        for my $module (glob('/usr/src/packages/KIWIALL/*')) {
           $this->logMsg("I", "Found $module");
           my $bname = basename($module);
           $bname =~ s,.*-Module,Module,,;
           $bname =~ s,.*-Product,Product,,;
-          system("cp -av $module/*-Media$cd $dir/$bname");
+          my ($module_dir) = glob("$module/*-Media$cd");
+          if (!$module_dir) {
+            $this->logMsg("I", "Could not find <$module/*-Media$cd>");
+            next;
+          }
+          $this->logMsg("I", "Copy <$module_dir>");
+          system("cp -a $module_dir $dir/$bname");
+          open(my $fd, '<', "$module_dir.report");
+          while (<$fd>) {
+            my $line = $_;
+            print "$module_dir.report $line";
+            next if $line =~ m,</?report>,;
+            print $report $line;
+          }
+          close($fd);
         }
+        print $report "</report>\n";
+        close($report);
     }
     return 0;
 }
