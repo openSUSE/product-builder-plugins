@@ -56,6 +56,7 @@ sub execute {
         $this->logMsg("I", "Check <$cd>");
         my $dir = $this->collect()->basesubdirs()->{$cd};
         open(my $report, '>', "$dir.report");
+        open(my $products, '>>', "$dir/media.1/products");
         print $report "<report>\n";
         $this->logMsg("I", "Pass $dir");
         for my $module (glob('/usr/src/packages/KIWIALL/*')) {
@@ -78,9 +79,14 @@ sub execute {
             print $report $line;
           }
           close($fd);
+          open($fd, '<', "$module_dir/media.1/products");
+          my $line = <$fd>;
+          $line =~ s,^/,/$bname,;
+          close($fd);
         }
         print $report "</report>\n";
         close($report);
+        close($products);
     }
     return 0;
 }
