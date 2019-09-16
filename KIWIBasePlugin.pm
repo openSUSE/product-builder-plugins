@@ -209,7 +209,7 @@ sub getSubdirLists {
     }
     my @ret = ();
     my $coll = $this->{m_collect};
-    my $dbm = $coll->productData()->getOpt("DEBUGMEDIUM");
+    my $dbm = $coll->productData()->getOpt("DEBUGMEDIUM") // 0;
     my $flavor = $coll->productData()->getVar("FLAVOR");
     my $basesubdirs = $coll->basesubdirs();
     my @paths = values(%{$basesubdirs});
