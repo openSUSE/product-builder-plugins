@@ -97,7 +97,7 @@ sub execute {
         return 0;
     }
     foreach my $dirlist($this->getSubdirLists()) {
-        my ($s,$m) = $this->executeDir(sort @{$dirlist});
+        $this->executeDir(sort @{$dirlist});
     }
     return 0;
 }
@@ -114,11 +114,10 @@ sub executeDir {
         return 0;
     }
     my $coll  = $this->{m_collect};
-    my $repoid = $coll->productData()->getInfo("REPOID");
-
+    my $repoids = $coll->productData()->getInfo("REPOID");
     my $distroname = $coll->productData()->getInfo("DISTRO");
     my $result = $this -> createRepositoryMetadata(
-        \@paths, $repoid, $distroname
+        \@paths, $repoids, $distroname
     );
 
     return 1;
@@ -203,6 +202,17 @@ sub createRepositoryMetadata {
         $cmd .= " --split";
         $cmd .= " --baseurl=media://";
     }
+
+    ### set repository tags
+    my $debugmedium  = $this->{m_collect}->productData()->getOpt("DEBUGMEDIUM");
+    my $sourcemedium = $this->{m_collect}->productData()->getOpt("SOURCEMEDIUM");
+    foreach my $p (@{$paths}) {
+        $cmd .= " --content=\"debug\"" if $debugmedium && $p =~ m{.*$debugmedium$}x;
+        $cmd .= " --content=\"source\"" if $sourcemedium && $p =~ m{.*$sourcemedium$}x;
+    }
+    my $flavor = $this->{m_collect}->productData()->getVar("FLAVOR");
+    $cmd .= " --content=\"pool\"" if $flavor =~ m{ftp}i || $flavor =~ m{pool}i;
+
     foreach my $p (@{$paths}) {
         $cmd .= " $p";
     }
