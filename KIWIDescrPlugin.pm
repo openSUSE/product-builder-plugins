@@ -201,6 +201,7 @@ sub createRepositoryMetadata {
     foreach my $p (@{$paths}) {
         $cmd .= " $p";
     }
+    $cmd .= " 2>&1"; # verbose output
     $this->logMsg("I", "Executing command <$cmd>");
     $call = $this -> callCmd($cmd);
     $status = $call->[0];
