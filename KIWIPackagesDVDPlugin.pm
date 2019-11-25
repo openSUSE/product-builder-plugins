@@ -47,7 +47,7 @@ sub execute {
         return;
     }
     my $flavor = $this->collect()->productData()->getVar("FLAVOR");
-    if (($flavor || '') ne 'Packages-DVD') {
+    if (($flavor || '') ne 'Full') {
         return 0;
     }
     $this->logMsg("I", "Basedir " . $this->handler()->collect()->basedir());
