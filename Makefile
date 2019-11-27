@@ -10,7 +10,7 @@ kiwi_prefix = ${buildroot}/usr/share/kiwi/
 #============================================
 # Variables... 
 #--------------------------------------------
-KIWIPLUGINVZ  = ${kiwi_prefix}/modules/plugins/suse-${version}
+KIWIPLUGINVZ  = ${kiwi_prefix}/modules/plugins/${version}
 
 install:
 	#============================================
