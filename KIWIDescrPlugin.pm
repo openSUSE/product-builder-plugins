@@ -256,7 +256,7 @@ sub createRepositoryMetadata {
         my $kwdfile = abs_path(
             $this->collect()->{m_xml}->{xmlOrigFile}
         );
-        $kwdfile =~ /\.(?:kiwi|xml)$/.kwd/;
+        $kwdfile =~ s/\.(?:kiwi|xml)$/.kwd/;
         $cmd = "/usr/bin/add_product_susedata";
         $cmd .= " -u"; # unique filenames
         $cmd .= " -k $kwdfile";
