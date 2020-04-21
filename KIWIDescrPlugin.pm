@@ -44,10 +44,8 @@ sub new {
         $configfile = $2;
     }
     if((! $configpath) || (! $configfile)) {
-        $this->logMsg("E",
-            "wrong parameters in plugin initialisation"
-        );
-        return;
+        $this->logMsg("E", "wrong parameters in plugin initialisation");
+        return 1;
     }
     my $ini = Config::IniFiles -> new( -file => "$configpath/$configfile" );
     my $name       = $ini->val('base', 'name');
@@ -63,10 +61,8 @@ sub new {
         or not defined($rezip)
         or not defined($enable)
     ) {
-        $this->logMsg("E",
-            "Plugin ini file <$config> seems broken!"
-        );
-        return;
+        $this->logMsg("E", "Plugin ini file <$config> seems broken!");
+        return 1;
     }
     $this->name($name);
     $this->order($order);
@@ -91,10 +87,8 @@ sub execute {
     my $basesubdirs = $coll->basesubdirs();
     if(not defined($basesubdirs)) {
         ## prevent crash when dereferencing
-        $this->logMsg("E",
-            "<basesubdirs> is undefined! Skipping <$this->name()>"
-        );
-        return 0;
+        $this->logMsg("E", "<basesubdirs> is undefined! Skipping <$this->name()>");
+        return 1;
     }
     foreach my $dirlist($this->getSubdirLists()) {
         $this->executeDir(sort @{$dirlist});
@@ -120,7 +114,7 @@ sub executeDir {
         \@paths, $repoids, $distroname
     );
 
-    return 1;
+    return 0;
 }
 
 sub addLicenseFile {
@@ -152,9 +146,7 @@ sub addLicenseFile {
       $call = $this -> callCmd($cmd);
       $status = $call->[0];
       my $out = join("\n",@{$call->[1]});
-      $this->logMsg("I",
-          "Called $cmd exit status: <$status> output: $out"
-      );
+      $this->logMsg("I", "Called $cmd exit status: <$status> output: $out");
       unlink "$masterpath/$licensename.tar";
     }
 }
@@ -207,10 +199,8 @@ sub createRepositoryMetadata {
     $status = $call->[0];
     if ($status) {
         my $out = join("\n",@{$call->[1]});
-        $this->logMsg("E",
-            "Called <$cmd> exit status: <$status> output: $out"
-        );
-        return 0;
+        $this->logMsg("E", "Called <$cmd> exit status: <$status> output: $out");
+        return 1;
     }
     $cmd = "$this->{m_rezip} $masterpath ";
     $this->logMsg("I", "Executing command <$cmd>");
@@ -218,10 +208,8 @@ sub createRepositoryMetadata {
     $status = $call->[0];
     if($status) {
         my $out = join("\n",@{$call->[1]});
-        $this->logMsg("E",
-            "Called <$cmd> exit status: <$status> output: $out"
-        );
-        return 0;
+        $this->logMsg("E", "Called <$cmd> exit status: <$status> output: $out");
+        return 1;
     }
 
     if (-x "/usr/bin/openSUSE-appstream-process")
@@ -233,9 +221,7 @@ sub createRepositoryMetadata {
         $call = $this -> callCmd($cmd);
         $status = $call->[0];
         my $out = join("\n",@{$call->[1]});
-        $this->logMsg("I",
-            "Called $cmd exit status: <$status> output: $out"
-        );
+        $this->logMsg("I", "Called $cmd exit status: <$status> output: $out");
     }
 
     if ( -f "/usr/bin/add_product_susedata" ) {
@@ -254,10 +240,8 @@ sub createRepositoryMetadata {
         $status = $call->[0];
         if($status) {
             my $out = join("\n",@{$call->[1]});
-            $this->logMsg("E",
-                "Called <$cmd> exit status: <$status> output: $out"
-            );
-            return 0;
+            $this->logMsg("E", "Called <$cmd> exit status: <$status> output: $out");
+            return 1;
         }
     }
 
@@ -265,9 +249,7 @@ sub createRepositoryMetadata {
 
       $this->addLicenseFile($masterpath, "license");
       foreach my $product (@{$coll->{m_products}}) {
-        $this->logMsg("I",
-            "Check for $product license file"
-        );
+        $this->logMsg("I", "Check for $product license file");
         $this->addLicenseFile($masterpath, "license-$product");
       }
 
@@ -276,21 +258,17 @@ sub createRepositoryMetadata {
       $call = $this -> callCmd($cmd);
       $status = $call->[0];
       my $out = join("\n",@{$call->[1]});
-      $this->logMsg("I",
-          "Called $cmd exit status: <$status> output: $out"
-      );
+      $this->logMsg("I", "Called $cmd exit status: <$status> output: $out");
 
       # detached pubkey
       $cmd = "sign -p $masterpath/repodata/repomd.xml > $masterpath/repodata/repomd.xml.key";
       $call = $this -> callCmd($cmd);
       $status = $call->[0];
       $out = join("\n",@{$call->[1]});
-      $this->logMsg("I",
-          "Called $cmd exit status: <$status> output: $out"
-      );
+      $this->logMsg("I", "Called $cmd exit status: <$status> output: $out");
     }
 
-    return 2;
+    return 0;
 }
 
 1;

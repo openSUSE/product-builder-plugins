@@ -44,7 +44,7 @@ sub new {
     }
     if(not defined($configpath) or not defined($configfile)) {
         $this->logMsg("E", "wrong parameters in plugin initialisation\n");
-        return;
+        return 1;
     }
     ## Gather all necessary information from the inifile:
     #===
@@ -82,7 +82,7 @@ sub new {
         or not defined($targetdir)
     ) {
         $this->logMsg("E", "Plugin ini file <$config> seems broken!");
-        return;
+        return 1;
     }
     $this->name($name);
     $this->order($order);

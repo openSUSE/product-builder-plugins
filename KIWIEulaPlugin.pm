@@ -42,10 +42,8 @@ sub new {
         $configfile = $2;
     }
     if ((! $configpath) || (! $configfile)) {
-        $this->logMsg("E",
-            "wrong parameters in plugin initialisation\n"
-        );
-        return;
+        $this->logMsg("E", "wrong parameters in plugin initialisation\n");
+        return 1;
     }
     ## plugin content:
     #-----------------
@@ -92,10 +90,8 @@ sub new {
         or not defined($oopt)
         or not defined($popt)
     ) {
-        $this->logMsg("E",
-            "Plugin ini file <$config> seems broken!\n"
-        );
-        return;
+        $this->logMsg("E", "Plugin ini file <$config> seems broken!\n");
+        return 1;
     }
     $this->name($name);
     $this->order($order);
@@ -137,9 +133,7 @@ sub execute {
     my $targetdir = $dirname."/".$this->{m_requireddirs}->[1];
     my $SRCFILE = FileHandle -> new();
     if (! $SRCFILE -> open ("<$srcdir/$this->{m_source}")) {
-        $this->logMsg("E",
-            "PatternsPlugin: cannot read <$srcdir/".$this->{m_source}.">"
-        );
+        $this->logMsg("E", "PatternsPlugin: cannot read <$srcdir/".$this->{m_source}.">");
         $this->logMsg("I", "Skipping plugin <".$this->name().">");
         return $retval;
     }
