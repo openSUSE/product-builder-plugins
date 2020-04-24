@@ -105,11 +105,10 @@ sub add_checksum
 sub execute {
     my $this = shift;
     if(not ref($this)) {
-        return;
+        return 1;
     }
-    my $retval = 0;
     if($this->{m_ready} == 0) {
-        return $retval;
+        return 0;
     }
     my @targetmedia = $this->collect()->getMediaNumbers();
     my %targets;
@@ -124,8 +123,6 @@ sub execute {
         find({wanted => \&add_checksum, no_chdir=>1}, "docu") if -d "docu";
         find({wanted => \&add_checksum, no_chdir=>1}, "media.1") if -d "media.1";
 
-        $retval++;
-
         if (-e "CHECKSUMS") {
           my $cmd = "sign -d CHECKSUMS";
           my $call = $this -> callCmd($cmd);
@@ -137,7 +134,7 @@ sub execute {
         }
     }
 
-    return $retval;
+    return 0;
 }
 
 1;
