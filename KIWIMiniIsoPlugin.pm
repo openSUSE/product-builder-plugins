@@ -91,21 +91,20 @@ sub execute {
     if(not ref($this)) {
         return;
     }
-    my $retval = 0;
     if($this->{m_ready} == 0) {
-        return $retval;
+        return 0;
     }
     my $repoloc = $this->collect()->productData()->getOpt("REPO_LOCATION");
     my $ismini = $this->collect()->productData()->getVar("FLAVOR");
     if(not defined($ismini)) {
         $this->logMsg("W", "FLAVOR not set?");
-        return $retval;
+        return 0;
     }
     if ($ismini !~ m{mini}i) {
         $this->logMsg("I",
             "Nothing to do for media type <$ismini>"
         );
-        return $retval;
+        return 0;
     }
     my ($srv, $path);
     if (not defined($repoloc)) {
@@ -120,7 +119,7 @@ sub execute {
             $this->logMsg("W",
                 "Parsing repo-location=<$repoloc> failed!"
             );
-            return $retval;
+            return 0;
         }
     }
     
@@ -150,13 +149,11 @@ sub execute {
             . "This _MIGHT_ be ok for S/390. "
             . "Please verify <installation-images> package(s)";
         $this->logMsg("W", $msg);
-        return $retval;
+        return 0;
     }
-    $retval = $this -> updateGraphicsBootConfig (
+    return $this -> updateGraphicsBootConfig (
         \@gfxbootfiles, $repoloc, $srv, $path
     );
-
-    return $retval;
 }
 
 sub removeRepoData {
@@ -165,7 +162,7 @@ sub removeRepoData {
 
     $this->logMsg("I", "removing repodata from <$basedir>");
     system("find", $basedir, "-name", "repodata", "-a", "-type", "d", "-exec", "rm", "-rv", "{}", ";");
-    return $this;
+    return 0;
 }
 
 sub updateGraphicsBootConfig {
@@ -174,7 +171,6 @@ sub updateGraphicsBootConfig {
     my $repoloc = shift;
     my $srv = shift;
     my $path = shift;
-    my $retval = 0;
     foreach my $cfg(@{$gfxbootfiles}) {
         $this->logMsg("I", "Processing file <$cfg>: ");
         my $F = FileHandle -> new();
@@ -228,15 +224,14 @@ sub updateGraphicsBootConfig {
         unlink $cfg;
         if (! $F -> open(">$cfg")) {
             $this->logMsg("E", "Cant open file for writing <$cfg>!");
-            next;
+            return 1;
         }
         foreach(@lines) {
             print $F "$_\n";
         }
         $F -> close();
-        $retval++;
     }
-    return $retval;
+    return 0;
 }
 
 # borrowed from obs with permission from mls@suse.de to license as
