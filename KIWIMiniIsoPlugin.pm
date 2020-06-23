@@ -112,7 +112,7 @@ sub execute {
             "<REPO_LOCATION> is unset, boot protocol will be set to 'slp'!"
         );
     } else {
-        if ($repoloc =~ m{^http://([^/]+)/(.+)}x) {
+        if ($repoloc =~ m{^https?://([^/]+)/(.+)}x) {
             ($srv, $path) = ($1, $2);
         }
         if(not defined($srv) or not defined($path)) {
@@ -198,13 +198,8 @@ sub updateGraphicsBootConfig {
                 $ihp = $i;
             }
         }
-        if(!$repoloc) {
-            if($install == -1) {
-                push @lines, "install=slp";
-            } else {
-                $lines[$install] =~ s{^install.*}{install=slp}x;
-            }
-        } elsif($srv) {
+        if($srv) {
+            # store the repo location but don't change the default install method
             if($ihs == -1) {
                 push @lines, "install.http.server=$srv";
             } else {
@@ -214,11 +209,6 @@ sub updateGraphicsBootConfig {
                 push @lines, "install.http.path=$path";
             } else {
                 $lines[$ihp] =~ s{^(install.http.path).*}{$1=$path}x;
-            }
-            if($install == -1) {
-                push @lines, "install=http";
-            } else {
-                $lines[$install] =~ s{^install.*}{install=http}x;
             }
         }
         unlink $cfg;
