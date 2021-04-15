@@ -231,6 +231,7 @@ sub createRepositoryMetadata {
         $kwdfile =~ s/\.(?:kiwi|xml)$/.kwd/;
         $cmd = "/usr/bin/add_product_susedata";
         $cmd .= " -u"; # unique filenames
+        $cmd .= " -g"; # add gpg key ids as tags
         $cmd .= " -k $kwdfile";
         $cmd .= " -p"; # add diskusage data
         $cmd .= " -e /usr/share/doc/packages/eulas";
