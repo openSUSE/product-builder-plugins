@@ -254,6 +254,24 @@ sub createRepositoryMetadata {
         $this->addLicenseFile($masterpath, "license-$product");
       }
 
+      # rpm-md modulemd files
+      if (-e "/usr/src/packages/SOURCES/_modulemd.pst") {
+         $cmd = "/usr/lib/build/writemodulemd --filter /usr/src/packages/SOURCES/_modulemd.pst $masterpath/repodata > $masterpath/repodata/modules.yaml";
+         $call = $this -> callCmd($cmd);
+         $status = $call->[0];
+         my $out = join("\n",@{$call->[2]});
+         $this->logMsg("I",
+             "Called $cmd exit status: <$status> output: $out"
+         );
+         $cmd = "/usr/bin/modifyrepo $masterpath/repodata/modules.yaml $masterpath/repodata/";
+         $call = $this -> callCmd($cmd);
+         $status = $call->[0];
+         $out = join("\n",@{$call->[2]});
+         $this->logMsg("I",
+             "Called $cmd exit status: <$status> output: $out"
+         );
+      }
+
       # detached signature
       $cmd = "sign -d $masterpath/repodata/repomd.xml";
       $call = $this -> callCmd($cmd);
