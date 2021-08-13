@@ -262,11 +262,28 @@ sub createRepositoryMetadata {
     }
 
     if (-e "$masterpath/repodata/repomd.xml") {
-
       $this->addLicenseFile($masterpath, "license");
       foreach my $product (@{$coll->{m_products}}) {
         $this->logMsg("I", "Check for $product license file");
         $this->addLicenseFile($masterpath, "license-$product");
+      }
+
+      # rpm-md modulemd files
+      if (-e "_modulemd.in") {
+         $cmd = "/usr/lib/build/writemodulemd --filter _modulemd.in > $masterpath/repodata/modules.yaml";
+         $call = $this -> callCmd($cmd);
+         $status = $call->[0];
+         my $out = join("\n",@{$call->[1]});
+         $this->logMsg("I",
+             "Called $cmd exit status: <$status> output: $out"
+         );
+         $cmd = "/usr/bin/modifyrepo $masterpath/repodata/modules.yaml $masterpath/repodata/";
+         $call = $this -> callCmd($cmd);
+         $status = $call->[0];
+         $out = join("\n",@{$call->[1]});
+         $this->logMsg("I",
+             "Called $cmd exit status: <$status> output: $out"
+         );
       }
 
       # detached signature
