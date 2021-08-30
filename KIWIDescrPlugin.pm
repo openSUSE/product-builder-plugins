@@ -270,8 +270,8 @@ sub createRepositoryMetadata {
       }
 
       # rpm-md modulemd files
-      if (-e "/usr/src/packages/SOURCES/_modulemd.pst") {
-         $cmd = "/usr/lib/build/writemodulemd --filter /usr/src/packages/SOURCES/_modulemd.pst $masterpath/repodata > $masterpath/repodata/modules.yaml";
+      if (-e "/usr/src/packages/SOURCES/repos/_modulemd.yaml") {
+         $cmd = "/usr/lib/build/writemodulemd --filter /usr/src/packages/SOURCES/repos/_modulemd.yaml $masterpath/repodata > $masterpath/repodata/modules.yaml";
          $call = $this -> callCmd($cmd);
          $status = $call->[0];
          my $out = join("\n",@{$call->[2]});
