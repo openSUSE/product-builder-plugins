@@ -263,6 +263,7 @@ sub createRepositoryMetadata {
          $this->logMsg("I",
              "Called $cmd exit status: <$status> output: $out"
          );
+         return 1 if $status;
          $cmd = "/usr/bin/modifyrepo $masterpath/repodata/modules.yaml $masterpath/repodata/";
          $call = $this -> callCmd($cmd);
          $status = $call->[0];
@@ -270,6 +271,7 @@ sub createRepositoryMetadata {
          $this->logMsg("I",
              "Called $cmd exit status: <$status> output: $out"
          );
+         return 1 if $status;
       }
 
       # detached signature
@@ -278,6 +280,7 @@ sub createRepositoryMetadata {
       $status = $call->[0];
       my $out = join("\n",@{$call->[1]});
       $this->logMsg("I", "Called $cmd exit status: <$status> output: $out");
+      return 1 if $status;
 
       # detached pubkey
       $cmd = "sign -p $masterpath/repodata/repomd.xml > $masterpath/repodata/repomd.xml.key";
@@ -285,6 +288,7 @@ sub createRepositoryMetadata {
       $status = $call->[0];
       $out = join("\n",@{$call->[1]});
       $this->logMsg("I", "Called $cmd exit status: <$status> output: $out");
+      return 1 if $status;
     }
 
     return 0;
