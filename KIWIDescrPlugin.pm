@@ -287,6 +287,7 @@ sub createRepositoryMetadata {
              "Called $cmd exit status: <$status> output: $out"
          );
          return 1 if $status;
+         unlink("$masterpath/repodata/modules.yaml");
       }
 
       # detached signature
