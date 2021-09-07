@@ -145,7 +145,7 @@ sub addLicenseFile {
           return 1;
       }
       system("tar xf $$masterpath/$licensename.tar -C $external_license_dir");
-      $result = $? >> 8;
+      my $result = $? >> 8;
       if ($result != 0) {
           $this->logMsg( "E", "Untar failed!");
           return 1;
@@ -290,6 +290,23 @@ sub createRepositoryMetadata {
          );
          return 1 if $status;
          unlink("$masterpath/repodata/modules.yaml");
+      }
+
+      # comps files from metapackages
+      if (-d "$masterpath/comps") {
+         opendir(DH, "$masterpath/comps");
+         foreach my $comps (readdir(DH)) {
+           $cmd = "/usr/bin/modifyrepo $masterpath/comps/$comps --new-name=comps.xml $masterpath/repodata/";
+           $call = $this -> callCmd($cmd);
+           $status = $call->[0];
+           my $out = join("\n",@{$call->[2]});
+           $this->logMsg("I",
+               "Called $cmd exit status: <$status> output: $out"
+           );
+           return 1 if $status;
+         }
+         closedir(DH);
+         unlink("$masterpath/comps");
       }
 
       # detached signature
