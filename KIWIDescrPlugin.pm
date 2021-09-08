@@ -293,10 +293,12 @@ sub createRepositoryMetadata {
       }
 
       # comps files from metapackages
+      #
       if (-d "$masterpath/comps") {
          opendir(DH, "$masterpath/comps");
          foreach my $comps (readdir(DH)) {
-           $cmd = "/usr/bin/modifyrepo $masterpath/comps/$comps --new-name=comps.xml $masterpath/repodata/";
+           next if $comps =~ /^\./m;
+           $cmd = "/usr/bin/modifyrepo $masterpath/comps/$comps $masterpath/repodata/";
            $call = $this -> callCmd($cmd);
            $status = $call->[0];
            my $out = join("\n",@{$call->[2]});
