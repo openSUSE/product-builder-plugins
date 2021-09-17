@@ -144,7 +144,7 @@ sub addLicenseFile {
           $this->logMsg( "E", "mkdir failed!");
           return 1;
       }
-      system("tar xf $$masterpath/$licensename.tar -C $external_license_dir");
+      system("tar xf $masterpath/$licensename.tar -C $external_license_dir");
       my $result = $? >> 8;
       if ($result != 0) {
           $this->logMsg( "E", "Untar failed!");
