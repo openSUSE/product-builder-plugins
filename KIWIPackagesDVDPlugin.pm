@@ -65,6 +65,7 @@ sub execute {
           my $bname = basename($module);
           $bname =~ s,.*-Module,Module,,;
           $bname =~ s,.*-Product,Product,,;
+          $bname =~ s,.*-Liberty-Linux-,,;
           my ($module_dir) = glob("$module/*-Media$cd");
           if (!$module_dir) {
             $this->logMsg("I", "Could not find <$module/*-Media$cd>");

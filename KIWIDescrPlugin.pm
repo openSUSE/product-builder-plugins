@@ -298,7 +298,21 @@ sub createRepositoryMetadata {
          opendir(DH, "$masterpath/comps");
          foreach my $comps (readdir(DH)) {
            next if $comps =~ /^\./m;
-           $cmd = "/usr/bin/modifyrepo $masterpath/comps/$comps $masterpath/repodata/";
+           # decompress file
+           if ($comps =~ /\.gz$/m) {
+               $cmd = "gunzip $masterpath/comps/$comps";
+               $call = $this -> callCmd($cmd);
+               $status = $call->[0];
+               my $out = join("\n",@{$call->[2]});
+               $this->logMsg("I",
+                   "Called $cmd exit status: <$status> output: $out"
+               );
+               return 1 if $status;
+               $comps =~ s/\.gz$//;
+           }
+
+           # add uncompressed file
+           $cmd = "/usr/bin/modifyrepo --mdtype=group $masterpath/comps/$comps $masterpath/repodata/";
            $call = $this -> callCmd($cmd);
            $status = $call->[0];
            my $out = join("\n",@{$call->[2]});
@@ -306,9 +320,21 @@ sub createRepositoryMetadata {
                "Called $cmd exit status: <$status> output: $out"
            );
            return 1 if $status;
+
+           # add compressed file
+           $cmd = "/usr/bin/modifyrepo --compress-type=xz --mdtype=group_xz $masterpath/comps/$comps $masterpath/repodata/";
+           $call = $this -> callCmd($cmd);
+           $status = $call->[0];
+           my $out = join("\n",@{$call->[2]});
+           $this->logMsg("I",
+               "Called $cmd exit status: <$status> output: $out"
+           );
+           return 1 if $status;
+
+           unlink("$masterpath/comps/$comps");
          }
          closedir(DH);
-         unlink("$masterpath/comps");
+         rmdir("$masterpath/comps");
       }
 
       # detached signature
