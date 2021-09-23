@@ -312,7 +312,7 @@ sub createRepositoryMetadata {
            }
 
            # add uncompressed file
-           $cmd = "/usr/bin/modifyrepo --mdtype=group $masterpath/comps/$comps $masterpath/repodata/";
+           $cmd = "/usr/bin/modifyrepo --no-compress --mdtype=group $masterpath/comps/$comps $masterpath/repodata/";
            $call = $this -> callCmd($cmd);
            $status = $call->[0];
            my $out = join("\n",@{$call->[2]});
