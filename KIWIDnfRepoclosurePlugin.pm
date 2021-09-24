@@ -47,12 +47,13 @@ sub execute {
 
     my $collect = $this->collect();
     my $enabled = $this->collect()->productData()->getOpt("RUN_DEPENDENCY_CHECK");
-    return 0 if ($enabled || '') ne 'true';
+    return 0 if ($enabled || '') ne 'error' && ($enabled || '') ne 'warn';
 
     my @archs = keys(%{$collect->{m_archlist}->{m_archs}});
 
     $this->logMsg("I", "Basedir " . $this->handler()->collect()->basedir());
     my @targetmedia = $this->collect()->getMediaNumbers();
+    my $validation_failed;
     foreach my $cd (@targetmedia) {
         my $dir = $this->collect()->basesubdirs()->{$cd};
         next unless -d "$dir/repodata";
@@ -66,10 +67,14 @@ sub execute {
              my $status = $call->[0];
              if ($status) {
                  my $out = join("\n",@{$call->[1]});
-                 $this->logMsg("E", "Validation failed: $out");
-                 return 1;
+                 $this->logMsg("W", "Validation failed: $out");
+                 $validation_failed = 1;
              }
         }
+    }
+    if ($enabled eq 'error' && $validation_failed) {
+        $this->logMsg("E", "Any validation failed and check is enforced");
+        return 1;
     }
     return 0;
 }
