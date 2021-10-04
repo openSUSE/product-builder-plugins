@@ -294,6 +294,7 @@ sub createRepositoryMetadata {
 
       # comps files from metapackages
       #
+      my $out;
       if (-d "$masterpath/comps") {
          opendir(DH, "$masterpath/comps");
          foreach my $comps (readdir(DH)) {
@@ -303,7 +304,7 @@ sub createRepositoryMetadata {
                $cmd = "gunzip $masterpath/comps/$comps";
                $call = $this -> callCmd($cmd);
                $status = $call->[0];
-               my $out = join("\n",@{$call->[2]});
+               $out = join("\n",@{$call->[2]});
                $this->logMsg("I",
                    "Called $cmd exit status: <$status> output: $out"
                );
@@ -315,7 +316,7 @@ sub createRepositoryMetadata {
            $cmd = "/usr/bin/modifyrepo --no-compress --mdtype=group $masterpath/comps/$comps $masterpath/repodata/";
            $call = $this -> callCmd($cmd);
            $status = $call->[0];
-           my $out = join("\n",@{$call->[2]});
+           $out = join("\n",@{$call->[2]});
            $this->logMsg("I",
                "Called $cmd exit status: <$status> output: $out"
            );
@@ -325,7 +326,7 @@ sub createRepositoryMetadata {
            $cmd = "/usr/bin/modifyrepo --compress-type=xz --mdtype=group_xz $masterpath/comps/$comps $masterpath/repodata/";
            $call = $this -> callCmd($cmd);
            $status = $call->[0];
-           my $out = join("\n",@{$call->[2]});
+           $out = join("\n",@{$call->[2]});
            $this->logMsg("I",
                "Called $cmd exit status: <$status> output: $out"
            );
@@ -341,7 +342,7 @@ sub createRepositoryMetadata {
       $cmd = "sign -d $masterpath/repodata/repomd.xml";
       $call = $this -> callCmd($cmd);
       $status = $call->[0];
-      my $out = join("\n",@{$call->[1]});
+      $out = join("\n",@{$call->[1]});
       $this->logMsg("I", "Called $cmd exit status: <$status> output: $out");
       return 1 if $status;
 
