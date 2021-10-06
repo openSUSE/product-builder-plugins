@@ -281,14 +281,16 @@ sub createRepositoryMetadata {
              "Called $cmd exit status: <$status> output: $out"
          );
          return 1 if $status;
-         $cmd = "/usr/bin/modifyrepo $masterpath/repodata/modules.yaml $masterpath/repodata/";
-         $call = $this -> callCmd($cmd);
-         $status = $call->[0];
-         $out = join("\n",@{$call->[2]});
-         $this->logMsg("I",
-             "Called $cmd exit status: <$status> output: $out"
-         );
-         return 1 if $status;
+         if (-s "$masterpath/repodata/modules.yaml") {
+             $cmd = "/usr/bin/modifyrepo $masterpath/repodata/modules.yaml $masterpath/repodata/";
+             $call = $this -> callCmd($cmd);
+             $status = $call->[0];
+             $out = join("\n",@{$call->[2]});
+             $this->logMsg("I",
+                 "Called $cmd exit status: <$status> output: $out"
+             );
+             return 1 if $status;
+         }
          unlink("$masterpath/repodata/modules.yaml");
       }
 
