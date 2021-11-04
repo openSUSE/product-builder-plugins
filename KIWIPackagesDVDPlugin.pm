@@ -90,6 +90,9 @@ sub execute {
         print $report "</report>\n";
         close($report);
         close($products);
+
+        # drop main repodata on on fedora
+        system("rm -rf $dir/repodata") if -e "$dir/.discinfo";
     }
     return 0;
 }
