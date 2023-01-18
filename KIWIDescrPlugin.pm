@@ -157,7 +157,7 @@ sub addLicenseFile {
 
       $cmd = "$this->{m_modifyrepo}";
       $cmd .= " --unique-md-filenames";
-      $cmd .= " --checksum=sha256";
+      $cmd .= " --checksum=sha512";
       $cmd .= " $masterpath/$licensename.tar $masterpath/repodata";
 
       $call = $this -> callCmd($cmd);
@@ -185,7 +185,7 @@ sub createRepositoryMetadata {
     # the glob is only matching on files, so we need it for every directory depth
     $cmd .= " --excludes=boot/*.rpm";
     $cmd .= " --excludes=boot/*/*.rpm";
-    $cmd .= " --checksum=sha256";
+    $cmd .= " --checksum=sha512";
     $cmd .= " --no-database";
     $cmd .= " --error-exit-val"; # is not working with old createrepo
     foreach my $repoid (split(/\s+/, $repoids)) {
