@@ -303,8 +303,8 @@ sub createRepositoryMetadata {
       return 1 if $status;
 
       # create SBOM data, if the build tool is available
-      if (-x "/usr/lib/build/generate_spdx_sbom") {
-        my $spdx_distro = $this->collect()->productData()->getInfo("SPDX_DISTRO");
+      if (-x "/usr/lib/build/generate_sbom") {
+        my $spdx_distro = $this->collect()->productData()->getInfo("PURL_DISTRO");
 	if (!$spdx_distro) {
           # some guessing for our old distros to avoid further changes there
           my $vendor = $this->collect()->productData()->getInfo("VENDOR");
