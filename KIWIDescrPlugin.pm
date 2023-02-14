@@ -373,7 +373,7 @@ sub createRepositoryMetadata {
           }
         }
         $spdx_distro = "--distro $spdx_distro" if $spdx_distro;
-        $cmd = "/usr/lib/build/generate_spdx_sbom --product $spdx_distro $masterpath > $masterpath.sbom.json";
+        $cmd = "/usr/lib/build/generate_sbom --product $spdx_distro $masterpath > $masterpath.sbom.json";
         $call = $this -> callCmd($cmd);
         $status = $call->[0];
         $out = join("\n",@{$call->[1]});
