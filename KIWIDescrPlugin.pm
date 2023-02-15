@@ -320,7 +320,7 @@ sub createRepositoryMetadata {
           }
         }
         $spdx_distro = "--distro $spdx_distro" if $spdx_distro;
-        $cmd = "/usr/lib/build/generate_sbom $spdx_distro --product $masterpath > $masterpath.sbom.json";
+        $cmd = "/usr/lib/build/generate_sbom $spdx_distro --product $masterpath > $masterpath.spdx.json";
         $call = $this -> callCmd($cmd);
         $status = $call->[0];
         $out = join("\n",@{$call->[1]});
@@ -328,7 +328,7 @@ sub createRepositoryMetadata {
         return 1 if $status;
 
 	# CycloneDX
-        $cmd = "/usr/lib/build/generate_sbom --format cyclonedx --product $masterpath > $masterpath.sbom.cyclonedx";
+        $cmd = "/usr/lib/build/generate_sbom --format cyclonedx --product $masterpath > $masterpath.cdx.json";
         $call = $this -> callCmd($cmd);
         $status = $call->[0];
         $out = join("\n",@{$call->[1]});
