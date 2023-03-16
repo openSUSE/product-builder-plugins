@@ -93,6 +93,41 @@ sub execute {
 
         # drop main repodata on on fedora
         system("rm -rf $dir/repodata") if -e "$dir/.discinfo";
+
+        # create SBOM data, if the build tool is available
+        if (-x "/usr/lib/build/generate_sbom") {
+          # SPDX
+          my $spdx_distro = $this->collect()->productData()->getInfo("PURL_DISTRO");
+          if (!$spdx_distro) {
+            # some guessing for our old distros to avoid further changes there
+            my $vendor = $this->collect()->productData()->getInfo("VENDOR");
+            my $distname = $this->collect()->productData()->getVar("DISTNAME");
+            my $version = $this->collect()->productData()->getVar("VERSION");
+            if ($vendor eq 'openSUSE') {
+              $spdx_distro = "opensuse-leap-$version" if $distname eq 'Leap';
+              $spdx_distro = "opensuse-tumbleweed" if $distname eq 'openSUSE';
+            }
+            if ($vendor eq 'SUSE') {
+              $spdx_distro = "sles-$version" if $distname eq 'SLES';
+            }
+          }
+          $spdx_distro = "--distro $spdx_distro" if $spdx_distro;
+          $cmd = "/usr/lib/build/generate_sbom $spdx_distro --product $dir > $dir.spdx.json";
+          $call = $this -> callCmd($cmd);
+          $status = $call->[0];
+          $out = join("\n",@{$call->[1]});
+          $this->logMsg("I", "Called $cmd exit status: <$status> output: $out");
+          return 1 if $status;
+
+          # CycloneDX
+          $cmd = "/usr/lib/build/generate_sbom --format cyclonedx --product $dir > $dir.cdx.json";
+          $call = $this -> callCmd($cmd);
+          $status = $call->[0];
+          $out = join("\n",@{$call->[1]});
+          $this->logMsg("I", "Called $cmd exit status: <$status> output: $out");
+          return 1 if $status;
+       }
+
     }
     return 0;
 }
