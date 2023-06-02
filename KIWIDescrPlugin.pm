@@ -371,6 +371,7 @@ sub createRepositoryMetadata {
           }
 	  if ($vendor eq 'SUSE') {
 	    $spdx_distro = "sles-$version" if $distname eq 'SLES';
+	    $spdx_distro = "suse-alp" if $distname =~ /^ALP/m;
           }
         }
         $spdx_distro = "--distro $spdx_distro" if $spdx_distro;
