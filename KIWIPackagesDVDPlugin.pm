@@ -75,7 +75,6 @@ sub execute {
           open(my $fd, '<', "$module_dir.report");
           while (<$fd>) {
             my $line = $_;
-            print "$module_dir.report $line";
             next if $line =~ m,</?report>,;
             print $report $line;
           }
