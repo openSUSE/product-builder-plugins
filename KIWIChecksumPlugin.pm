@@ -102,6 +102,11 @@ sub add_checksum
     KIWIQX::qxx("sha256sum $file >> CHECKSUMS");
 }
 
+sub sort_checksum {
+    # fix that the order in which the filesystem returns entries does not work for reproducible builds
+    sort(@_);
+}
+
 sub execute {
     my $this = shift;
     if(not ref($this)) {
@@ -118,10 +123,10 @@ sub execute {
         my $dir = $this->collect()->basesubdirs()->{$cd};
         $this->logMsg("I", "Creating checksum file on medium <$cd>: $dir");
         chdir($dir);
-        find({wanted => \&add_checksum, no_chdir=>1}, "boot") if -d "boot";
-        find({wanted => \&add_checksum, no_chdir=>1}, "EFI")  if -d "EFI";
-        find({wanted => \&add_checksum, no_chdir=>1}, "docu") if -d "docu";
-        find({wanted => \&add_checksum, no_chdir=>1}, "media.1") if -d "media.1";
+        find({ preprocess => \&sort_checksum, wanted => \&add_checksum, no_chdir=>1}, "boot") if -d "boot";
+        find({ preprocess => \&sort_checksum, wanted => \&add_checksum, no_chdir=>1}, "EFI")  if -d "EFI";
+        find({ preprocess => \&sort_checksum, wanted => \&add_checksum, no_chdir=>1}, "docu") if -d "docu";
+        find({ preprocess => \&sort_checksum, wanted => \&add_checksum, no_chdir=>1}, "media.1") if -d "media.1";
 
         if (-e "CHECKSUMS") {
           my $cmd = "sign -d CHECKSUMS";
