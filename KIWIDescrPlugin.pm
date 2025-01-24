@@ -357,7 +357,11 @@ sub createRepositoryMetadata {
       return 1 if $status;
 
       # create SBOM data, if the build tool is available
-      if (-x "/usr/lib/build/generate_sbom") {
+      my $generate_sbom;
+      $generate_sbom = "/usr/lib/build/generate_sbom" if -x "/usr/lib/build/generate_sbom";
+      # prefer server version if available
+      $generate_sbom = "perl -I /.build /.build/generate_sbom" if -e "/.build/generate_sbom";
+      if ($generate_sbom) {
 	# SPDX
         my $spdx_distro = $this->collect()->productData()->getInfo("PURL_DISTRO");
 	if (!$spdx_distro) {
@@ -375,7 +379,7 @@ sub createRepositoryMetadata {
           }
         }
         $spdx_distro = "--distro $spdx_distro" if $spdx_distro;
-        $cmd = "/usr/lib/build/generate_sbom $spdx_distro --product $masterpath > $masterpath.spdx.json";
+        $cmd = "$generate_sbom $spdx_distro --product $masterpath > $masterpath.spdx.json";
         $call = $this -> callCmd($cmd);
         $status = $call->[0];
         $out = join("\n",@{$call->[1]});
@@ -383,7 +387,7 @@ sub createRepositoryMetadata {
         return 1 if $status;
 
 	# CycloneDX
-        $cmd = "/usr/lib/build/generate_sbom --format cyclonedx --product $masterpath > $masterpath.cdx.json";
+        $cmd = "$generate_sbom --format cyclonedx --product $masterpath > $masterpath.cdx.json";
         $call = $this -> callCmd($cmd);
         $status = $call->[0];
         $out = join("\n",@{$call->[1]});
